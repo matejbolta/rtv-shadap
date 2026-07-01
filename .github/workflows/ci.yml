@@ -32,3 +32,10 @@ jobs:
 
       - name: Build extension
         run: pnpm build
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtv-shadap-extension
+          path: dist/
+          if-no-files-found: error

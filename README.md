@@ -30,33 +30,81 @@ Izolirana mesta za nadaljnji ročni pregled:
 - `src/content/extractor.ts`: `CARD_SELECTOR`, `TITLE_SELECTOR`, `CONTENT_ROOT_SELECTOR`
 - `src/content/live-detection.ts`: atributi in kratke oznake za live signal
 
-## Namestitev na novi napravi
+## Najlazja namestitev na novi napravi
+
+Chrome in Brave unpacked extensiona ne namestita direktno iz zipa. Zip je samo prirocen paket za prenos; na novi napravi ga odzipas in v brskalniku izberes odzipano mapo.
+
+1. Odpri GitHub repo `matejbolta/rtv-shadap`.
+2. Pojdi na Releases.
+3. Prenesi zadnji `rtv-shadap-vX.Y.Z.zip`.
+4. Odzipaj ga, na primer v `~/Extensions/rtv-shadap-vX.Y.Z/`.
+5. V Chrome ali Brave nalozi odzipano mapo kot unpacked extension.
+
+Direktni link: <https://github.com/matejbolta/rtv-shadap/releases>
+
+Ce release se ni narejen, lahko uporabis tudi zadnji successful GitHub Actions run:
+
+1. Odpri Actions.
+2. Izberi zadnji zeleni CI run.
+3. Prenesi artifact `rtv-shadap-extension`.
+4. Odzipaj artifact.
+5. V brskalniku kot unpacked extension izberi odzipano mapo.
+
+Direktni link: <https://github.com/matejbolta/rtv-shadap/actions>
+
+### Brave na Pop!_OS
+
+1. Odpri `brave://extensions`.
+2. Vklopi Developer mode.
+3. Izberi Load unpacked.
+4. Izberi odzipano mapo `rtv-shadap-vX.Y.Z`.
+5. Odpri `https://www.rtvslo.si/`.
+
+### Chrome
+
+1. Odpri `chrome://extensions`.
+2. Vklopi Developer mode.
+3. Izberi Load unpacked.
+4. Izberi odzipano mapo `rtv-shadap-vX.Y.Z`.
+5. Odpri `https://www.rtvslo.si/`.
+
+### Posodobitev na novi napravi
+
+Unpacked extension se ne posodobi samodejno iz GitHuba. Za posodobitev prenesi novi zip, ga odzipaj cez staro mapo ali v novo mapo, potem v `chrome://extensions` ali `brave://extensions` klikni reload ikono pri RTV Shadap.
+
+## Ustvarjanje release zipa
+
+Lokalno:
 
 ```sh
-git clone <repo-url>
+pnpm install
+node scripts/package.mjs
+```
+
+To ustvari `release/rtv-shadap-vX.Y.Z.zip`.
+
+Na GitHubu:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Push taga zazene Release workflow, ki naredi GitHub Release in pripne zip.
+
+## Developer namestitev
+
+Ce hoces na novi napravi buildati iz source kode:
+
+```sh
+git clone git@github.com:matejbolta/rtv-shadap.git
 cd rtv-shadap
 corepack enable
 pnpm install
 pnpm build
 ```
 
-Nato v Chrome ali Brave naloži mapo `dist/` kot unpacked extension.
-
-## Chrome
-
-1. Odpri `chrome://extensions`.
-2. Vklopi Developer mode.
-3. Izberi Load unpacked.
-4. Izberi mapo `dist/`.
-5. Odpri `https://www.rtvslo.si/`.
-
-## Brave
-
-1. Odpri `brave://extensions`.
-2. Vklopi Developer mode.
-3. Izberi Load unpacked.
-4. Izberi mapo `dist/`.
-5. Odpri `https://www.rtvslo.si/`.
+Nato v Chrome ali Brave nalozi mapo `dist/` kot unpacked extension.
 
 ## Skripte
 
@@ -64,10 +112,11 @@ Nato v Chrome ali Brave naloži mapo `dist/` kot unpacked extension.
 pnpm typecheck
 pnpm test
 pnpm build
+node scripts/package.mjs
 pnpm watch
 ```
 
-`dist/` je generiran build output in ni commitan v repo.
+`dist/` in `release/` sta generiran output in nista commitana v repo.
 
 ## Ročni testni scenariji
 

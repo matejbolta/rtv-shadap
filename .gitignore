@@ -6,6 +6,7 @@ node_modules/
 
 # Generated extension bundle
 dist/
+release/
 
 # Test and editor output
 coverage/
