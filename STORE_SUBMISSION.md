@@ -24,6 +24,8 @@ RTV Shadap makes the RTV SLO homepage easier to scan.
 It visually dims stories you have already seen, marks stories you have opened, keeps live stories prominent, and hides selected promotional homepage sections. New stories stay visually clear, so you can quickly spot what changed since your last visit.
 
 The extension only runs on https://www.rtvslo.si/. It has no server, analytics, tracking, ads, or telemetry. Article history is stored locally in the browser using chrome.storage.local.
+
+RTV Shadap is an independent browser extension and is not affiliated with RTV SLO.
 ```
 
 Category:
