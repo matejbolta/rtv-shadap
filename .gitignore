@@ -1,0 +1,17 @@
+.DS_Store
+
+# Dependencies and package-manager caches
+node_modules/
+.pnpm-store/
+
+# Generated extension bundle
+dist/
+
+# Test and editor output
+coverage/
+.vitest/
+*.log
+
+# Local RTV page assets captured during manual DOM audits
+rtvslo si_files/
+spec.md

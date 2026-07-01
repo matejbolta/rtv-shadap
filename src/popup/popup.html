@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="sl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RTV Shadap</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">RTV SLO</p>
+          <h1>RTV Shadap</h1>
+        </div>
+        <button id="enabled-switch" class="switch" type="button" role="switch" aria-checked="true" title="Vklopi ali izklopi označevanje">
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span id="enabled-label" class="switch-label">Aktivno</span>
+        </button>
+      </header>
+      <section class="counts" aria-label="Trenutna stran">
+        <div class="count-card new"><strong id="count-new">0</strong><span>Novo</span></div>
+        <div class="count-card seen"><strong id="count-seen">0</strong><span>Že videno</span></div>
+        <div class="count-card opened"><strong id="count-opened">0</strong><span>Odprto</span></div>
+        <div class="count-card live"><strong id="count-live">0</strong><span>V živo</span></div>
+      </section>
+      <button id="reset" type="button">Ponastavi zgodovino</button>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

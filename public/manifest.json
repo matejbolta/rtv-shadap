@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "RTV Shadap",
+  "version": "0.1.0",
+  "description": "Utiša že videne RTV SLO novice in pusti novim, da izstopijo.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.rtvslo.si/*"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.rtvslo.si/*"],
+      "js": ["content-script.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "RTV Shadap",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_popup": "popup.html"
+  }
+}

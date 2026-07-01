@@ -1,0 +1,21 @@
+{
+  "name": "rtv-shadap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^20.14.10",
+    "esbuild": "^0.23.0",
+    "jsdom": "^24.1.1",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.4"
+  }
+}
