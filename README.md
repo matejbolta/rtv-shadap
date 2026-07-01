@@ -81,7 +81,10 @@ pnpm install
 node scripts/package.mjs
 ```
 
-To ustvari `release/rtv-shadap-vX.Y.Z.zip`.
+To ustvari dva zipa:
+
+- `release/rtv-shadap-vX.Y.Z.zip`: za rocno unpacked namestitev.
+- `release/rtv-shadap-vX.Y.Z-webstore.zip`: za upload v Chrome Web Store.
 
 Na GitHubu:
 
@@ -91,6 +94,8 @@ git push origin v0.1.0
 ```
 
 Push taga zazene Release workflow, ki naredi GitHub Release in pripne zip.
+
+Za Chrome Web Store obrazce uporabi `STORE_SUBMISSION.md`.
 
 ## Developer namestitev
 

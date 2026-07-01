@@ -42,11 +42,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          ZIP_PATH="$(ls release/rtv-shadap-*.zip | head -n 1)"
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            gh release upload "$TAG_NAME" "$ZIP_PATH" --clobber
+            gh release upload "$TAG_NAME" release/rtv-shadap-*.zip --clobber
           else
-            gh release create "$TAG_NAME" "$ZIP_PATH" \
+            gh release create "$TAG_NAME" release/rtv-shadap-*.zip \
               --title "RTV Shadap $TAG_NAME" \
-              --notes "Download the zip, unzip it, then load the unzipped folder as an unpacked extension in Chrome or Brave."
+              --notes "Use rtv-shadap-vX.Y.Z.zip for manual unpacked installation. Use rtv-shadap-vX.Y.Z-webstore.zip for Chrome Web Store upload."
           fi

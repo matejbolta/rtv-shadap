@@ -9,7 +9,8 @@ const folderName = `rtv-shadap-v${pkg.version}`;
 const releaseDir = join(root, "release");
 const stageRoot = join(releaseDir, ".stage");
 const stageDir = join(stageRoot, folderName);
-const zipPath = join(releaseDir, `${folderName}.zip`);
+const installZipPath = join(releaseDir, `${folderName}.zip`);
+const webstoreZipPath = join(releaseDir, `${folderName}-webstore.zip`);
 
 function run(command, args, options = {}) {
   return new Promise((resolvePromise, reject) => {
@@ -33,11 +34,14 @@ await run(process.execPath, [join(root, "scripts/build.mjs")]);
 
 await mkdir(releaseDir, { recursive: true });
 await rm(stageRoot, { recursive: true, force: true });
-await rm(zipPath, { force: true });
+await rm(installZipPath, { force: true });
+await rm(webstoreZipPath, { force: true });
 await mkdir(stageDir, { recursive: true });
 await cp(join(root, "dist"), stageDir, { recursive: true });
 
-await run("zip", ["-qr", zipPath, folderName], { cwd: stageRoot });
+await run("zip", ["-qr", installZipPath, folderName], { cwd: stageRoot });
+await run("zip", ["-qr", webstoreZipPath, "."], { cwd: join(root, "dist") });
 await rm(stageRoot, { recursive: true, force: true });
 
-console.log(`Created ${zipPath}`);
+console.log(`Created ${installZipPath}`);
+console.log(`Created ${webstoreZipPath}`);
