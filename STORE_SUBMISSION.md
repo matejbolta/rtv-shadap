@@ -80,6 +80,24 @@ Data collection:
 The extension does not collect, transmit, sell, or share user data.
 ```
 
+Data usage checkboxes:
+
+```text
+Leave all user-data category checkboxes unchecked.
+```
+
+Certification checkboxes:
+
+```text
+Check all three certification boxes.
+```
+
+Privacy policy URL:
+
+```text
+https://github.com/matejbolta/rtv-shadap/blob/main/PRIVACY.md
+```
+
 Local data:
 
 ```text
