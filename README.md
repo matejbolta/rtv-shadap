@@ -42,6 +42,11 @@ Chrome in Brave unpacked extensiona ne namestita direktno iz zipa. Zip je samo p
 
 Direktni link: <https://github.com/matejbolta/rtv-shadap/releases>
 
+V Releases sta lahko dva zipa za isto verzijo:
+
+- `rtv-shadap-vX.Y.Z.zip`: uporabi tega za rocno namestitev na svojem racunalniku.
+- `rtv-shadap-vX.Y.Z-webstore.zip`: tega ne uporabljaj za rocno namestitev; namenjen je samo za upload v Chrome Web Store.
+
 Ce release se ni narejen, lahko uporabis tudi zadnji successful GitHub Actions run:
 
 1. Odpri Actions.
@@ -83,8 +88,8 @@ node scripts/package.mjs
 
 To ustvari dva zipa:
 
-- `release/rtv-shadap-vX.Y.Z.zip`: za rocno unpacked namestitev.
-- `release/rtv-shadap-vX.Y.Z-webstore.zip`: za upload v Chrome Web Store.
+- `release/rtv-shadap-vX.Y.Z.zip`: za rocno unpacked namestitev. V zipu je ena mapa `rtv-shadap-vX.Y.Z/`, da ga lahko normalno odzipas in izberes kot unpacked extension.
+- `release/rtv-shadap-vX.Y.Z-webstore.zip`: za upload v Chrome Web Store. V zipu je `manifest.json` direktno v korenu, ker Google zahteva tak format.
 
 Na GitHubu:
 
