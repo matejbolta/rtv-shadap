@@ -4,6 +4,13 @@ RTV Shadap je Manifest V3 razširitev za Chrome in Brave, ki deluje samo na nasl
 
 Razširitev ne uporablja strežnika, zunanjih API-jev, analitike ali telemetrije. Vsa zgodovina je shranjena lokalno v `chrome.storage.local` posameznega brskalnika.
 
+## Projektni kontekst za agente
+
+Ta projekt je bil razvit skozi iterativno delo z LLM agentom. Za prihodnje vzdrževanje naj agenti najprej preberejo:
+
+- `AGENTS.md`: kratka pravila in invarianti za coding agente.
+- `docs/LLM_HANDOFF.md`: podroben projektni spomin, arhitektura, UX odločitve, release playbook in debugging navodila.
+
 ## Kako deluje
 
 - Content script se takoj ustavi, če stran ni natančno RTV SLO naslovnica.
