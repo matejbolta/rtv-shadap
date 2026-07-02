@@ -89,8 +89,8 @@ To ustvari dva zipa:
 Na GitHubu:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 Push taga zazene Release workflow, ki naredi GitHub Release in pripne zip.
