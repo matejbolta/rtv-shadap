@@ -1,7 +1,7 @@
-import { HOMEPAGE_ORIGIN, LATEST_COUNTS_KEY, RESCAN_DEBOUNCE_MS, SNAPSHOT_DEBOUNCE_MS, STORAGE_KEY } from "../shared/constants";
-import { sendRuntimeMessage, storageGet, storageSet } from "../shared/chrome-api";
+import { HOMEPAGE_ORIGIN, RESCAN_DEBOUNCE_MS, SNAPSHOT_DEBOUNCE_MS, STORAGE_KEY } from "../shared/constants";
+import { sendRuntimeMessage, storageGet } from "../shared/chrome-api";
 import type { BroadcastMessage, RuntimeMessage, RuntimeResponse } from "../shared/messages";
-import type { ArticleSnapshot, ArticleStatus, PageCounts, StorageState } from "../shared/models";
+import type { ArticleSnapshot, ArticleStatus, StorageState } from "../shared/models";
 import { extractArticles, toSnapshots, type ExtractedArticle } from "./extractor";
 import { clearRendering, renderArticles } from "./renderer";
 import { hideDistractingHomepageSections, restoreHiddenSections } from "./site-cleanup";
@@ -60,12 +60,10 @@ class HomepageController {
   private async persistSnapshot(): Promise<void> {
     if (this.abandonSessionOnPagehide) return;
     const snapshots = toSnapshots(this.articles);
-    const statuses = this.statuses.length > 0 ? this.statuses : snapshots.map((article) => ({ key: article.key, state: "new" as const, isLive: article.isLive }));
     const response = await sendMessage({
       type: "UPDATE_SESSION_SNAPSHOT",
       sessionId: this.sessionId,
-      articles: snapshots,
-      counts: countStatuses(statuses)
+      articles: snapshots
     });
     this.applyResponse(response);
   }
@@ -103,7 +101,6 @@ class HomepageController {
         };
       });
       renderArticles(this.articles, this.statuses);
-      void storageSet({ [LATEST_COUNTS_KEY]: this.currentCounts() });
     } catch {
       // Background classification still runs below; local storage is only a fast fallback.
     }
@@ -161,10 +158,8 @@ class HomepageController {
 
   private bindLifecycleHandlers(): void {
     window.addEventListener("pagehide", () => {
-      const message: RuntimeMessage = this.abandonSessionOnPagehide
-        ? { type: "ABANDON_SESSION", sessionId: this.sessionId, reason: "same-tab-article-navigation" }
-        : { type: "COMMIT_SESSION", sessionId: this.sessionId, reason: "pagehide" };
-      void sendMessage(message);
+      if (!this.abandonSessionOnPagehide) return;
+      void sendMessage({ type: "ABANDON_SESSION", sessionId: this.sessionId, reason: "same-tab-article-navigation" });
     });
     window.addEventListener("pageshow", () => {
       if (!this.restartSessionOnPageshow) return;
@@ -180,11 +175,7 @@ class HomepageController {
   }
 
   private bindRuntimeMessages(): void {
-    chrome.runtime.onMessage.addListener((message: BroadcastMessage, _sender, sendResponse) => {
-      if (message.type === "REQUEST_PAGE_COUNTS") {
-        sendResponse({ counts: this.currentCounts() });
-        return;
-      }
+    chrome.runtime.onMessage.addListener((message: BroadcastMessage) => {
       if (message.type === "HISTORY_CHANGED") void this.scanAndUpdate();
       if (message.type === "SETTINGS_CHANGED") {
         this.enabled = message.enabled;
@@ -195,14 +186,6 @@ class HomepageController {
         }
       }
     });
-  }
-
-  private currentCounts(): PageCounts {
-    const snapshots = toSnapshots(this.articles);
-    const statuses = this.statuses.length > 0
-      ? this.statuses
-      : snapshots.map((article) => ({ key: article.key, state: "new" as const, isLive: article.isLive }));
-    return countStatuses(statuses);
   }
 }
 
@@ -217,17 +200,6 @@ function isSameTabArticleActivation(event: Event, link: HTMLAnchorElement): bool
     return event.key === "Enter" && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
   }
   return false;
-}
-
-function countStatuses(statuses: ArticleStatus[]): PageCounts {
-  return statuses.reduce<PageCounts>(
-    (counts, status) => {
-      counts[status.state] += 1;
-      if (status.isLive) counts.live += 1;
-      return counts;
-    },
-    { new: 0, seen: 0, opened: 0, live: 0 }
-  );
 }
 
 function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {

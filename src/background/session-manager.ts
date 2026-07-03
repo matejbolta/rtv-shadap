@@ -1,4 +1,4 @@
-import type { ArticleSnapshot, ArticleStatus, PageCounts, PendingSession, SessionArticle, StorageState } from "../shared/models";
+import type { ArticleSnapshot, ArticleStatus, PendingSession, SessionArticle, StorageState } from "../shared/models";
 import { pruneHistory, upsertOpenedRecord, upsertSeenRecord } from "./repository";
 
 export function pendingKey(tabId: number, sessionId: string): string {
@@ -15,7 +15,7 @@ export function startOrReplaceSession(
   for (const key of Object.keys(state.pendingSessions)) {
     const session = state.pendingSessions[key];
     if (session?.tabId === tabId && session.sessionId !== sessionId) {
-      commitPendingSession(state, key, timestamp);
+      delete state.pendingSessions[key];
     }
   }
   mergeSnapshot(state, tabId, sessionId, articles, timestamp);
@@ -94,17 +94,6 @@ export function getStatuses(state: StorageState, articles: ArticleSnapshot[]): A
       state: record?.openedAt ? "opened" : record ? "seen" : "new"
     };
   });
-}
-
-export function countStatuses(statuses: ArticleStatus[]): PageCounts {
-  return statuses.reduce<PageCounts>(
-    (counts, status) => {
-      counts[status.state] += 1;
-      if (status.isLive) counts.live += 1;
-      return counts;
-    },
-    { new: 0, seen: 0, opened: 0, live: 0 }
-  );
 }
 
 function commitPendingSession(state: StorageState, key: string, timestamp: number): void {

@@ -51,6 +51,21 @@ describe("session behavior", () => {
     expect(state.history["rtv:3"]).toBeUndefined();
   });
 
+  it("replaces same-tab homepage sessions without marking auto-refreshed stories as seen", () => {
+    const state = emptyState();
+    startOrReplaceSession(state, 1, "a", [article(1), article(2)], 10);
+    startOrReplaceSession(state, 1, "b", [article(2), article(3)], 20);
+    startOrReplaceSession(state, 1, "c", [article(3), article(4)], 30);
+
+    expect(state.history["rtv:1"]).toBeUndefined();
+    expect(state.history["rtv:2"]).toBeUndefined();
+    expect(state.pendingSessions["1:a"]).toBeUndefined();
+    expect(state.pendingSessions["1:b"]).toBeUndefined();
+
+    commitSession(state, 1, "c", 40);
+    expect(Object.keys(state.history).sort()).toEqual(["rtv:3", "rtv:4"]);
+  });
+
   it("reconciles leftover pending sessions", () => {
     const state = emptyState();
     mergeSnapshot(state, 1, "a", [article(1)], 10);

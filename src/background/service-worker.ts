@@ -1,14 +1,12 @@
 import type { RuntimeMessage, RuntimeResponse } from "../shared/messages";
 import { isRuntimeMessage } from "../shared/messages";
-import { sendTabMessage, storageSet } from "../shared/chrome-api";
-import { LATEST_COUNTS_KEY } from "../shared/constants";
-import type { PageCounts } from "../shared/models";
+import { queryTabs, sendTabMessage } from "../shared/chrome-api";
+import { HOMEPAGE_ORIGIN } from "../shared/constants";
 import { Repository } from "./repository";
 import {
   abandonSession,
   commitSession,
   commitSessionsForTab,
-  countStatuses,
   getStatuses,
   markArticleOpened,
   reconcileLeftoverPendingSessions,
@@ -17,13 +15,6 @@ import {
 } from "./session-manager";
 
 const repository = new Repository();
-const latestCountsByTab = new Map<number, PageCounts>();
-
-function rememberCounts(state: { latestPage?: { tabId: number; updatedAt: number; counts: PageCounts } }, tabId: number, counts: PageCounts): void {
-  latestCountsByTab.set(tabId, counts);
-  state.latestPage = { tabId, updatedAt: Date.now(), counts };
-  void storageSet({ [LATEST_COUNTS_KEY]: counts });
-}
 
 chrome.runtime.onInstalled.addListener(() => {
   void repository.mutate((state) => {
@@ -39,7 +30,6 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   void repository.mutate((state) => {
     commitSessionsForTab(state, tabId, Date.now());
   }).then(broadcastHistoryChanged);
-  latestCountsByTab.delete(tabId);
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
@@ -58,7 +48,6 @@ async function handleMessage(message: unknown, sender: chrome.runtime.MessageSen
           if (!state.settings.enabled) return { ok: true as const, enabled: false, statuses: [] };
           startOrReplaceSession(state, tabId, message.sessionId, message.articles, Date.now());
           const statuses = getStatuses(state, message.articles);
-          rememberCounts(state, tabId, countStatuses(statuses));
           return { ok: true as const, enabled: true, statuses };
         });
       case "UPDATE_SESSION_SNAPSHOT":
@@ -66,7 +55,6 @@ async function handleMessage(message: unknown, sender: chrome.runtime.MessageSen
         return repository.mutate((state) => {
           if (!state.settings.enabled) return { ok: true as const, enabled: false, statuses: [] };
           mergeSnapshot(state, tabId, message.sessionId, message.articles, Date.now());
-          rememberCounts(state, tabId, message.counts);
           return { ok: true as const, enabled: true, statuses: getStatuses(state, message.articles) };
         });
       case "MARK_ARTICLE_OPENED":
@@ -106,32 +94,20 @@ async function handleMessage(message: unknown, sender: chrome.runtime.MessageSen
           enabled: state.settings.enabled,
           statuses: getStatuses(state, message.articles)
         }));
-      case "GET_PAGE_COUNTS":
-        return repository.read().then((state) => {
-          const requestedTabId = message.tabId ?? tabId;
-          const fallbackCounts = state.latestPage?.counts ?? Array.from(latestCountsByTab.values()).at(-1) ?? null;
-          return {
-            ok: true as const,
-            enabled: state.settings.enabled,
-            counts: requestedTabId == null ? fallbackCounts : latestCountsByTab.get(requestedTabId) ?? fallbackCounts
-          };
-        });
       case "SET_ENABLED":
         return repository.mutate((state) => {
           state.settings.enabled = message.enabled;
           return { ok: true as const, enabled: state.settings.enabled };
         }).then((response) => {
-          broadcastToHomepageTabs({ type: "SETTINGS_CHANGED", enabled: message.enabled });
+          void broadcastToHomepageTabs({ type: "SETTINGS_CHANGED", enabled: message.enabled });
           return response;
         });
       case "RESET_HISTORY":
         return repository.mutate((state) => {
           state.history = {};
           state.pendingSessions = {};
-          state.latestPage = undefined;
           return { ok: true as const, enabled: state.settings.enabled };
         }).then((response) => {
-          void storageSet({ [LATEST_COUNTS_KEY]: { new: 0, seen: 0, opened: 0, live: 0 } });
           broadcastHistoryChanged();
           return response;
         });
@@ -144,11 +120,12 @@ async function handleMessage(message: unknown, sender: chrome.runtime.MessageSen
 }
 
 function broadcastHistoryChanged(): void {
-  broadcastToHomepageTabs({ type: "HISTORY_CHANGED" });
+  void broadcastToHomepageTabs({ type: "HISTORY_CHANGED" });
 }
 
-function broadcastToHomepageTabs(message: { type: "HISTORY_CHANGED" } | { type: "SETTINGS_CHANGED"; enabled: boolean }): void {
-  for (const tabId of latestCountsByTab.keys()) {
-    sendTabMessage(tabId, message).catch(() => undefined);
+async function broadcastToHomepageTabs(message: { type: "HISTORY_CHANGED" } | { type: "SETTINGS_CHANGED"; enabled: boolean }): Promise<void> {
+  const tabs = await queryTabs({ url: `${HOMEPAGE_ORIGIN}/*` }).catch(() => []);
+  for (const tab of tabs) {
+    if (tab.id != null) sendTabMessage(tab.id, message).catch(() => undefined);
   }
 }

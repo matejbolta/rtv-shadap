@@ -1,6 +1,6 @@
 import { MAX_HISTORY_RECORDS, SCHEMA_VERSION, STORAGE_KEY } from "../shared/constants";
 import { storageGet, storageSet } from "../shared/chrome-api";
-import type { ArticleHistoryRecord, ArticleSnapshot, LatestPageSnapshot, PendingSession, StorageState } from "../shared/models";
+import type { ArticleHistoryRecord, ArticleSnapshot, PendingSession, StorageState } from "../shared/models";
 
 export const emptyState = (): StorageState => ({
   schemaVersion: SCHEMA_VERSION,
@@ -36,8 +36,7 @@ export function normalizeState(value: unknown): StorageState {
     schemaVersion: SCHEMA_VERSION,
     history: isRecord(state.history) ? state.history as Record<string, ArticleHistoryRecord> : {},
     pendingSessions: isRecord(state.pendingSessions) ? state.pendingSessions as Record<string, PendingSession> : {},
-    settings: { enabled: state.settings?.enabled !== false },
-    latestPage: isLatestPageSnapshot(state.latestPage) ? state.latestPage : undefined
+    settings: { enabled: state.settings?.enabled !== false }
   };
 }
 
@@ -89,9 +88,4 @@ export function pruneHistory(history: Record<string, ArticleHistoryRecord>, limi
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function isLatestPageSnapshot(value: unknown): value is LatestPageSnapshot {
-  if (!isRecord(value) || !isRecord(value.counts)) return false;
-  return typeof value.tabId === "number" && typeof value.updatedAt === "number";
 }

@@ -1,8 +1,6 @@
 :root {
   --rtv-tracker-seen-title-opacity: 0.7;
-  --rtv-tracker-seen-media-opacity: 0.7;
   --rtv-tracker-opened-title-opacity: 0.55;
-  --rtv-tracker-opened-media-opacity: 0.55;
   --rtv-tracker-marker-bg: #1e5eff;
   --rtv-tracker-opened-bg: #2f343a;
   --rtv-tracker-live-bg: #d71920;
@@ -23,8 +21,8 @@
   content: "";
 }
 
-[data-rtv-tracker-state="seen"]:not([data-rtv-tracker-live="true"]) {
-  filter: grayscale(0.32) saturate(0.66) contrast(0.94);
+[data-rtv-tracker-card="true"][data-rtv-tracker-state="seen"]:not([data-rtv-tracker-live="true"]) {
+  filter: grayscale(0.5) saturate(0.56) contrast(0.9);
 }
 
 [data-rtv-tracker-card="true"][data-rtv-tracker-state="seen"]:not([data-rtv-tracker-live="true"])::after {
@@ -37,17 +35,12 @@
   ), rgb(0 0 0 / 4%);
 }
 
-[data-rtv-tracker-state="seen"]:is(h1, h2, h3, h4, a, [class*="title"], [class*="headline"]):not([data-rtv-tracker-live="true"]) {
+[data-rtv-tracker-card="true"][data-rtv-tracker-state="seen"]:not([data-rtv-tracker-live="true"]) :is(h1, h2, h3, h4, a, [class*="title"], [class*="headline"]) {
   opacity: var(--rtv-tracker-seen-title-opacity);
 }
 
-[data-rtv-tracker-state="seen"]:is(img, picture, figure):not([data-rtv-tracker-live="true"]) {
-  opacity: var(--rtv-tracker-seen-media-opacity);
-  filter: grayscale(0.4) saturate(0.62) contrast(0.9);
-}
-
-[data-rtv-tracker-state="opened"]:not([data-rtv-tracker-live="true"]) {
-  filter: grayscale(0.48) saturate(0.54) contrast(0.86);
+[data-rtv-tracker-card="true"][data-rtv-tracker-state="opened"]:not([data-rtv-tracker-live="true"]) {
+  filter: grayscale(0.62) saturate(0.46) contrast(0.82);
 }
 
 [data-rtv-tracker-card="true"][data-rtv-tracker-state="opened"]:not([data-rtv-tracker-live="true"])::after {
@@ -60,13 +53,8 @@
   ), rgb(0 0 0 / 7%);
 }
 
-[data-rtv-tracker-state="opened"]:is(h1, h2, h3, h4, a, [class*="title"], [class*="headline"]):not([data-rtv-tracker-live="true"]) {
+[data-rtv-tracker-card="true"][data-rtv-tracker-state="opened"]:not([data-rtv-tracker-live="true"]) :is(h1, h2, h3, h4, a, [class*="title"], [class*="headline"]) {
   opacity: var(--rtv-tracker-opened-title-opacity);
-}
-
-[data-rtv-tracker-state="opened"]:is(img, picture, figure):not([data-rtv-tracker-live="true"]) {
-  opacity: var(--rtv-tracker-opened-media-opacity);
-  filter: grayscale(0.52) saturate(0.48) contrast(0.84);
 }
 
 [data-rtv-tracker-live="true"] {

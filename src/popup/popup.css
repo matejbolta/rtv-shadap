@@ -98,68 +98,9 @@ h1 {
   opacity: 0.72;
 }
 
-.counts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 16px;
-}
-
-.count-card.new {
-  grid-column: 1 / -1;
-  min-height: 76px;
-}
-
-.count-card {
-  min-height: 64px;
-  padding: 10px;
-  border: 1px solid #d8dee4;
-  border-left: 4px solid #3568e8;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.count-card.seen {
-  border-left-color: #777f8c;
-  background:
-    repeating-linear-gradient(135deg, rgb(0 0 0 / 1%) 0 8px, rgb(0 0 0 / 3%) 8px 13px),
-    #fff;
-}
-
-.count-card.opened {
-  border-left-color: #2f343a;
-  background:
-    repeating-linear-gradient(135deg, rgb(0 0 0 / 2%) 0 8px, rgb(0 0 0 / 5%) 8px 13px),
-    #fff;
-}
-
-.count-card.live {
-  border-left-color: #c81e1e;
-}
-
-.counts strong,
-.counts span {
-  display: block;
-}
-
-.counts strong {
-  font-size: 24px;
-  line-height: 1;
-  color: #111827;
-}
-
-.count-card.new strong {
-  font-size: 32px;
-}
-
-.counts span {
-  margin-top: 5px;
-  color: #5f6875;
-}
-
 #reset {
   width: 100%;
-  margin-top: 16px;
+  margin-top: 18px;
   padding: 10px 12px;
   border: 1px solid #b42318;
   border-radius: 8px;

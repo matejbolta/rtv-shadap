@@ -40,7 +40,6 @@ export interface StorageState {
   history: Record<string, ArticleHistoryRecord>;
   pendingSessions: Record<string, PendingSession>;
   settings: ExtensionSettings;
-  latestPage?: LatestPageSnapshot;
 }
 
 export type ArticleVisualState = "new" | "seen" | "opened";
@@ -49,17 +48,4 @@ export interface ArticleStatus {
   key: string;
   state: ArticleVisualState;
   isLive: boolean;
-}
-
-export interface PageCounts {
-  new: number;
-  seen: number;
-  opened: number;
-  live: number;
-}
-
-export interface LatestPageSnapshot {
-  tabId: number;
-  updatedAt: number;
-  counts: PageCounts;
 }
