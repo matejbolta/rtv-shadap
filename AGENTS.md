@@ -16,6 +16,7 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 - Keep live stories visually prominent.
 - Same-tab article clicks must mark only that article as opened and abandon the homepage session. They must not mark all homepage articles as seen.
 - Closing the homepage tab commits the homepage session as seen.
+- Same-tab homepage refreshes/replacements must not commit the previous session, because RTV can auto-refresh and that must not make newly injected stories seen.
 - Closing separate article tabs must not affect homepage state.
 
 ## Code Orientation
@@ -26,7 +27,7 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 - `src/content/extractor.ts`: RTV article/media extraction.
 - `src/content/site-cleanup.ts`: narrow RTV homepage cleanup rules.
 - `src/content/content.css`: visual dimming/stripe UX.
-- `src/popup/`: popup switch, counts, reset history.
+- `src/popup/`: popup switch and reset history.
 
 ## Change Rules
 

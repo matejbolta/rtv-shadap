@@ -47,13 +47,16 @@ These are easy to accidentally break. Treat them as product requirements, not im
 7. Closing separate article tabs must not affect homepage state.
    The content script does not run on article pages, so closing article tabs should not commit homepage snapshots.
 
-8. Live stories stay visually prominent.
+8. RTV auto-refreshes must not commit the previous homepage session.
+   RTV can replace/reload the homepage while a tab is left open. A story that appeared during auto-refresh A must not become seen just because auto-refresh B happened.
+
+9. Live stories stay visually prominent.
    If a card is detected as `V zivo`, `V živo`, or `LIVE`, it should not be dimmed even if history says it was seen/opened. Live is orthogonal metadata, not a fourth visual state.
 
-9. New stories must pop visually by contrast.
+10. New stories must pop visually by contrast.
    The UX goal is not decoration. Seen/opened items should be quiet enough that the user's eye naturally lands on new items.
 
-10. Do not turn the project into a generic ad blocker or page rewriter.
+11. Do not turn the project into a generic ad blocker or page rewriter.
     The cleanup behavior is intentionally narrow and RTV-homepage-specific.
 
 ## Historical Context
@@ -77,10 +80,11 @@ Early popup versions had a normal checkbox labeled enabled/active, a legend, URL
 
 - product name `RTV Shadap`,
 - switch instead of checkbox,
-- simple count cards,
 - reset history button,
 - no redundant legend,
 - no "open or refresh URL" text.
+
+Later, the count cards were removed entirely because they were not useful enough and were easy to make misleading on a dynamic homepage. The popup should stay focused on two actions: enable/disable and reset history.
 
 The visual dimming went through several rounds:
 
@@ -220,8 +224,8 @@ tests/
 
 `src/popup/*`
 
-- Popup switch, counts, and reset history.
-- Counts should reflect live active tab when possible, then background latest counts, then stored fallback.
+- Popup switch and reset history.
+- Do not reintroduce count cards unless there is a genuinely reliable product reason.
 
 `src/shared/*`
 
@@ -258,7 +262,6 @@ There are three primary states:
 
 There is also `isLive`, which is orthogonal:
 
-- live cards are counted in `live`,
 - live cards can still have history records,
 - live cards should not be dimmed.
 
@@ -278,17 +281,12 @@ interface StorageState {
   history: Record<string, ArticleHistoryRecord>;
   pendingSessions: Record<string, PendingSession>;
   settings: { enabled: boolean };
-  latestPage?: LatestPageSnapshot;
 }
 ```
 
-There is also a separate latest counts key:
+The storage key still contains an earlier project name (`rtvNovo`). Do not rename storage keys casually; renaming them resets existing users' state unless you implement migration.
 
-```text
-rtvRadarLatestCounts
-```
-
-The old key names still contain earlier project names (`rtvNovo`, `rtvRadar`). Do not rename storage keys casually; renaming them resets existing users' state unless you implement migration.
+Older installs may have leftover count-related fields/keys such as `latestPage` or `rtvRadarLatestCounts`. Current code ignores them.
 
 ## Homepage Session Lifecycle
 
@@ -318,6 +316,21 @@ On rescan:
 - a debounced `UPDATE_SESSION_SNAPSHOT` is sent,
 - the pending session stores the union of articles seen during the session.
 
+Important: a DOM mutation alone does not commit history. It only updates the current pending session and rendering.
+
+### Same-Tab Homepage Replacement
+
+RTV can also refresh/replace the homepage document while the tab remains open. This caused a real bug:
+
+1. Auto-refresh A added new colored stories.
+2. Auto-refresh B started a new homepage session in the same tab.
+3. The old implementation committed session A when session B started.
+4. Result: stories added in A were already gray in B, even though the user may not have looked at them.
+
+Current rule: starting a new homepage session in the same tab discards the previous pending session instead of committing it.
+
+Do not change this back to "commit old session on replacement" unless you have a better way to distinguish an RTV auto-refresh from a deliberate user visit.
+
 ### Visibility Hidden
 
 When the homepage tab becomes hidden, the content script persists a snapshot but does not commit the session.
@@ -336,17 +349,15 @@ This is the main workflow the user likes: scan homepage, open selected stories i
 
 The content script also sends a lifecycle message on `pagehide`.
 
-If this is a normal homepage close/navigation without `abandonSessionOnPagehide`, it sends:
+`pagehide` by itself must not commit a session. RTV auto-refreshes can trigger page lifecycle events, and treating `pagehide` as "the user finished scanning" caused auto-refreshed stories to gray out in the next refresh cycle.
 
-```text
-COMMIT_SESSION
-```
-
-If the user clicked an article in the same tab, it sends:
+If the user clicked an article in the same tab, `pagehide` sends:
 
 ```text
 ABANDON_SESSION
 ```
+
+Normal homepage tab closing is handled by `chrome.tabs.onRemoved` in the service worker.
 
 ### Same-Tab Article Click
 
@@ -460,13 +471,18 @@ If changing these, test visually on:
 - lower category sections,
 - both dark and lighter image content.
 
+### Avoid Two-Stage Lazy-Load Dimming
+
+RTV lazy-loads or late-renders some media while the user scrolls. Do not stack the main grayscale/filter treatment on both the card container and child `img`/`picture`/`figure` elements. That creates an annoying two-stage effect where a seen card looks only semi-dimmed until it enters the viewport, then becomes fully dimmed when the image element receives its own state/filter.
+
+The main filter should live on `[data-rtv-tracker-card="true"]`; title opacity can be applied through descendants of that card.
+
 ### Popup UX
 
 Popup should remain compact and direct:
 
 - product name,
 - enabled switch,
-- count cards,
 - reset history.
 
 Avoid reintroducing:
@@ -686,20 +702,9 @@ Check:
 - page is not live-only,
 - local history was not reset.
 
-### "Popup counts show zero/dashes/wrong values"
+### "Popup counts are missing"
 
-There used to be a bug where counts stayed as dashes. Current popup pulls:
-
-1. live counts from active tab via `REQUEST_PAGE_COUNTS`,
-2. background latest counts via `GET_PAGE_COUNTS`,
-3. stored fallback from `LATEST_COUNTS_KEY` or `latestPage`.
-
-Check:
-
-- `REQUEST_PAGE_COUNTS` listener in content script,
-- `rememberCounts` in service worker,
-- `LATEST_COUNTS_KEY`,
-- active tab URL.
+This is intentional. The popup used to show new/seen/opened/live counts, but the user found them useless and likely misleading. Current popup exposes only enable/disable and reset history.
 
 ### "A promo/banner is still visible"
 
