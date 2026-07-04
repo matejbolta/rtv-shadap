@@ -1,10 +1,13 @@
 const HIDDEN_ATTR = "data-rtv-tracker-hidden-section";
+const NEWS_CARD_SELECTOR = ".xl-news, .md-news, .sm-news, .article-container, article";
 
 const STANDALONE_PROMO_IMAGE_SELECTOR = [
-  ".container.text-center a > img",
-  "a[href*='365.rtvslo.si'] > img",
   "img[src*='banner-1400x']",
   "img[data-src*='banner-1400x']",
+  "img[src*='1400x80']",
+  "img[data-src*='1400x80']",
+  "img[src*='1400x320']",
+  "img[data-src*='1400x320']",
   "img[src*='rtv365_banner']",
   "img[data-src*='rtv365_banner']"
 ].join(",");
@@ -53,17 +56,22 @@ function hideSodelujteSection(document: Document): void {
 }
 
 function findStandalonePromoContainer(image: HTMLImageElement): HTMLElement | null {
+  if (!hasStandalonePromoImageSource(image)) return null;
+  if (image.closest(NEWS_CARD_SELECTOR)) return null;
+
   const textCenteredContainer = image.closest<HTMLElement>(".container.text-center");
   if (textCenteredContainer) return textCenteredContainer;
-
-  const imageSource = `${image.src} ${image.dataset.src ?? ""}`;
-  if (!/banner-1400x|rtv365_banner/.test(imageSource)) return null;
 
   const link = image.closest<HTMLElement>("a");
   const wrapper = link?.parentElement;
   if (!wrapper || wrapper.matches("section, article")) return link;
 
   return wrapper.childElementCount === 1 ? wrapper : link;
+}
+
+function hasStandalonePromoImageSource(image: HTMLImageElement): boolean {
+  const imageSource = `${image.getAttribute("src") ?? ""} ${image.dataset.src ?? ""}`;
+  return /banner-1400x|rtv365_banner|(?:^|[_-])1400x(?:80|320)(?:[_\-.]|$)/.test(imageSource);
 }
 
 function findPortalShortcutRow(link: HTMLAnchorElement): HTMLElement | null {

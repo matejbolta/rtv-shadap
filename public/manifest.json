@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RTV Shadap",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Utiša že videne RTV SLO novice in pusti novim, da izstopijo.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.rtvslo.si/*"],

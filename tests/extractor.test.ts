@@ -63,4 +63,29 @@ describe("extractArticles", () => {
     expect(document.querySelector<HTMLElement>("section[aria-label='Sodelujte']")?.style.display).toBe("none");
     expect(articles.some((article) => article.key === "rtv365:175232322")).toBe(false);
   });
+
+  it("does not hide regular article cards just because they use text-centered containers", () => {
+    document.documentElement.innerHTML = `
+      <main>
+        <section aria-label="Aktualno">
+          <article class="xl-news container text-center">
+            <a href="/svet/testna-novica/800001">
+              <img src="https://img.rtvslo.si/_files/2026/07/04/regular-news-1400x320.jpg" alt="">
+              <h2>Testna novica ostane vidna</h2>
+            </a>
+          </article>
+          <div class="container text-center">
+            <a href="/sport/nogomet/sp-2026">
+              <img src="https://img.rtvslo.si/_files/2026/06/04/banner-1400x80.jpg" alt="">
+            </a>
+          </div>
+        </section>
+      </main>
+    `;
+
+    hideDistractingHomepageSections(document);
+
+    expect(document.querySelector<HTMLElement>(".xl-news")?.style.display).not.toBe("none");
+    expect(document.querySelector<HTMLElement>(".container.text-center[data-rtv-tracker-hidden-section='promo-banner']")?.style.display).toBe("none");
+  });
 });
