@@ -1,11 +1,13 @@
-import type { RuntimeMessage, RuntimeResponse } from "../shared/messages";
-import { STORAGE_KEY } from "../shared/constants";
-import { queryTabs, sendRuntimeMessage, sendTabMessage, storageGet, storageSet } from "../shared/chrome-api";
-import type { StorageState } from "../shared/models";
+import type { RuntimeMessage, RuntimeResponse, TabResponse } from "../shared/messages";
+import { queryTabs, sendRuntimeMessage, sendTabMessage } from "../shared/chrome-api";
 
 const enabledSwitch = document.querySelector<HTMLButtonElement>("#enabled-switch");
+const markPageButton = document.querySelector<HTMLButtonElement>("#mark-page");
 const resetButton = document.querySelector<HTMLButtonElement>("#reset");
 const enabledLabel = document.querySelector<HTMLElement>("#enabled-label");
+
+let enabled = true;
+let successTimer: number | undefined;
 
 void refresh();
 
@@ -13,15 +15,21 @@ enabledSwitch?.addEventListener("click", () => {
   const nextEnabled = enabledSwitch.getAttribute("aria-checked") !== "true";
   setEnabledUi(nextEnabled);
   enabledSwitch.disabled = true;
-  void setEnabled(nextEnabled)
-    .finally(() => {
-      if (enabledSwitch) enabledSwitch.disabled = false;
-    });
+  void setEnabled(nextEnabled).finally(() => {
+    if (enabledSwitch) enabledSwitch.disabled = false;
+  });
+});
+
+markPageButton?.addEventListener("click", () => {
+  void markCurrentPageSeen();
 });
 
 resetButton?.addEventListener("click", () => {
-  if (!confirm("Res ponastavim zgodovino RTV Shadap?")) return;
-  void sendMessage({ type: "RESET_HISTORY" }).then(refresh);
+  if (!confirm("Reset RTV Shadap history?")) return;
+  resetButton.disabled = true;
+  void sendMessage({ type: "RESET_HISTORY" }).finally(() => {
+    if (resetButton) resetButton.disabled = false;
+  });
 });
 
 async function refresh(): Promise<void> {
@@ -29,34 +37,60 @@ async function refresh(): Promise<void> {
   if (settings.ok) setEnabledUi(settings.enabled);
 }
 
-async function setEnabled(enabled: boolean): Promise<void> {
-  const response = await sendMessage({ type: "SET_ENABLED", enabled });
-  if (!response.ok || response.enabled !== enabled) {
-    await writeEnabledFallback(enabled);
+async function setEnabled(nextEnabled: boolean): Promise<void> {
+  const response = await sendMessage({ type: "SET_ENABLED", enabled: nextEnabled });
+  if (!response.ok) {
+    setEnabledUi(!nextEnabled);
+    return;
   }
-  setEnabledUi(enabled);
-  const activeTab = await getActiveTab();
-  if (activeTab?.id != null) {
-    await sendTabMessage(activeTab.id, { type: "SETTINGS_CHANGED", enabled }).catch(() => undefined);
+  setEnabledUi(response.enabled);
+}
+
+async function markCurrentPageSeen(): Promise<void> {
+  if (!enabled || !markPageButton) return;
+  window.clearTimeout(successTimer);
+  markPageButton.classList.remove("is-success");
+  markPageButton.disabled = true;
+  markPageButton.classList.add("is-working");
+  try {
+    const activeTab = await getActiveTab();
+    if (activeTab?.id == null || (activeTab.url != null && !activeTab.url.startsWith("https://www.rtvslo.si/"))) {
+      return;
+    }
+    const response = await sendTabMessage<TabResponse>(activeTab.id, { type: "MARK_CURRENT_PAGE_SEEN" });
+    if (!response.ok) return;
+    flashSuccess();
+  } catch {
+    // Keep the popup intentionally minimal; the page remains unchanged on failure.
+  } finally {
+    markPageButton.classList.remove("is-working");
+    markPageButton.disabled = !enabled;
   }
 }
 
-function setEnabledUi(enabled: boolean): void {
-  if (enabledSwitch) enabledSwitch.setAttribute("aria-checked", String(enabled));
-  setText(enabledLabel, enabled ? "Aktivno" : "Izklopljeno");
+function flashSuccess(): void {
+  if (!markPageButton) return;
+  window.clearTimeout(successTimer);
+  markPageButton.classList.add("is-success");
+  successTimer = window.setTimeout(() => {
+    markPageButton.classList.remove("is-success");
+  }, 900);
 }
 
-function setText(element: HTMLElement | null, value: number | string): void {
-  if (element) element.textContent = String(value);
+function setEnabledUi(nextEnabled: boolean): void {
+  enabled = nextEnabled;
+  if (enabledSwitch) enabledSwitch.setAttribute("aria-checked", String(nextEnabled));
+  if (markPageButton) markPageButton.disabled = !nextEnabled;
+  setText(enabledLabel, nextEnabled ? "Enabled" : "Disabled");
+}
+
+function setText(element: HTMLElement | null, value: string): void {
+  if (element) element.textContent = value;
 }
 
 async function getActiveTab(): Promise<chrome.tabs.Tab | undefined> {
-  try {
-    const tabs = await queryTabs({ active: true, currentWindow: true });
-    return tabs[0];
-  } catch {
-    return undefined;
-  }
+  const tabs = await queryTabs({ active: true, currentWindow: true });
+  return tabs[0];
 }
 
 function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
@@ -64,16 +98,4 @@ function sendMessage(message: RuntimeMessage): Promise<RuntimeResponse> {
     ok: false,
     error: error instanceof Error ? error.message : "Message failed"
   }));
-}
-
-async function writeEnabledFallback(enabled: boolean): Promise<void> {
-  const result = await storageGet(STORAGE_KEY);
-  const current = result[STORAGE_KEY] as Partial<StorageState> | undefined;
-  const next: StorageState = {
-    schemaVersion: 1,
-    history: current?.history ?? {},
-    pendingSessions: current?.pendingSessions ?? {},
-    settings: { ...(current?.settings ?? { enabled: true }), enabled }
-  };
-  await storageSet({ [STORAGE_KEY]: next });
 }

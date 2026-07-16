@@ -2,6 +2,12 @@
 
 Use `release/rtv-shadap-vX.Y.Z-webstore.zip` for Chrome Web Store upload. Its `manifest.json` is at the zip root.
 
+## Version 0.2.6 update notes
+
+```text
+RTV Shadap now uses a fully manual workflow. Press “Do the magic” to dim every story on the current RTV SLO page; the same stories remain dimmed wherever they appear across the site. Loading, closing, refreshing, or leaving a page no longer marks anything automatically. This update also adds all-site support, a darker and more consistent seen treatment, a simplified popup, and a green success flash after marking completes.
+```
+
 ## Listing
 
 Name:
@@ -13,17 +19,17 @@ RTV Shadap
 Short description:
 
 ```text
-Highlights new RTV SLO homepage stories by dimming items you have already seen or opened.
+Manually dim RTV SLO stories on the current page and keep them dimmed everywhere on the site.
 ```
 
 Detailed description:
 
 ```text
-RTV Shadap makes the RTV SLO homepage easier to scan.
+RTV Shadap makes RTV SLO news pages easier to scan.
 
-It visually dims stories you have already seen, marks stories you have opened, keeps live stories prominent, and hides selected promotional homepage sections. New stories stay visually clear, so you can quickly spot what changed since your last visit.
+Press the popup button to dim all stories currently shown on an RTV SLO page. The extension remembers those stories locally, so the same articles stay dimmed when they appear on the homepage, category pages, or elsewhere on RTV SLO. Nothing is marked automatically when you load, close, or leave a page. Live stories remain visually prominent, and selected promotional sections are hidden on the homepage.
 
-The extension only runs on https://www.rtvslo.si/. It has no server, analytics, tracking, ads, or telemetry. Article history is stored locally in the browser using chrome.storage.local.
+The extension only runs on https://www.rtvslo.si/. It has no server, analytics, tracking, ads, or telemetry. Manually marked article history is stored locally in the browser using chrome.storage.local.
 
 RTV Shadap is an independent browser extension and is not affiliated with RTV SLO.
 ```
@@ -49,7 +55,7 @@ Unlisted first, public later if desired.
 ## Single purpose
 
 ```text
-RTV Shadap helps users scan the RTV SLO homepage by visually distinguishing new, already seen, opened, and live stories.
+RTV Shadap lets users manually dim the stories on any RTV SLO news page and recognizes the same stories across the site.
 ```
 
 ## Permission justification
@@ -57,13 +63,13 @@ RTV Shadap helps users scan the RTV SLO homepage by visually distinguishing new,
 `storage`:
 
 ```text
-Used to store article status locally in the user's browser, including whether RTV SLO homepage stories were already seen or opened. No data is transmitted to any server.
+Used to store article IDs that the user manually marked from an RTV SLO page. No data is transmitted to any server.
 ```
 
 `https://www.rtvslo.si/*` host permission:
 
 ```text
-Required so the extension can run on RTV SLO pages, identify article cards on the homepage, apply visual states, and hide selected promotional sections. The extension does not run on unrelated websites.
+Required so the extension can identify and dim article cards across RTV SLO pages and hide selected promotional sections on the homepage. The extension does not run on unrelated websites.
 ```
 
 ## Privacy
@@ -101,7 +107,7 @@ https://github.com/matejbolta/rtv-shadap/blob/main/PRIVACY.md
 Local data:
 
 ```text
-The extension stores article IDs, article status, and timestamps locally in chrome.storage.local so it can remember what was already seen or opened. This data remains on the user's device.
+The extension stores article IDs, manual seen status, and timestamps locally in chrome.storage.local so it can recognize the same story across RTV SLO pages. This data remains on the user's device.
 ```
 
 ## Test instructions for reviewers
@@ -109,9 +115,11 @@ The extension stores article IDs, article status, and timestamps locally in chro
 ```text
 1. Install the extension.
 2. Open https://www.rtvslo.si/.
-3. Use the homepage normally: scan stories, open a story, return to the homepage, and reopen the homepage later.
-4. Previously seen stories should be visually dimmed, opened stories should be marked, and new stories should remain prominent.
-5. Open the extension popup to reset local history if needed.
+3. Open the extension popup and press “Do the magic”.
+4. The stories on that page should become dimmed immediately.
+5. Open another RTV SLO page or category. The same stories should remain dimmed wherever they appear, while unmarked stories stay prominent.
+6. Merely loading, closing, or leaving a page must not mark stories automatically.
+7. Open the extension popup to reset local history if needed.
 ```
 
 ## Assets still needed in the dashboard

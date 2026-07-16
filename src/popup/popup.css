@@ -16,7 +16,7 @@ main {
 
 .topbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -26,15 +26,6 @@ h1 {
   font-size: 20px;
   line-height: 1.1;
   letter-spacing: 0;
-}
-
-.eyebrow {
-  margin: 0 0 2px;
-  color: #6b7280;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
 }
 
 .switch {
@@ -98,10 +89,58 @@ h1 {
   opacity: 0.72;
 }
 
+#mark-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 163px;
+  margin-top: 20px;
+  padding: 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #1e5eff;
+  box-shadow: 0 7px 18px rgb(30 94 255 / 24%);
+  color: #fff;
+  font: 700 20px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+#mark-page:hover:not(:disabled) {
+  background: #174ed9;
+  box-shadow: 0 9px 22px rgb(30 94 255 / 30%);
+  transform: translateY(-1px);
+}
+
+#mark-page:focus-visible {
+  outline: 3px solid #84a9ff;
+  outline-offset: 2px;
+}
+
+#mark-page:disabled {
+  background: #9da9bd;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+#mark-page.is-working {
+  cursor: progress;
+}
+
+#mark-page.is-success,
+#mark-page.is-success:hover,
+#mark-page.is-success:disabled {
+  background: #168a4b;
+  box-shadow: 0 9px 22px rgb(22 138 75 / 30%);
+}
+
 #reset {
   width: 100%;
-  margin-top: 18px;
-  padding: 10px 12px;
+  min-height: 63px;
+  margin-top: 16px;
+  padding: 13px 12px;
   border: 1px solid #b42318;
   border-radius: 8px;
   color: #9f1c14;
@@ -113,4 +152,9 @@ h1 {
 
 #reset:hover {
   background: #fff1f0;
+}
+
+#reset:disabled {
+  cursor: progress;
+  opacity: 0.65;
 }

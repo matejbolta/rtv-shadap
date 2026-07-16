@@ -20,7 +20,7 @@ export function renderArticles(articles: ExtractedArticle[], statuses: ArticleSt
       card.dataset.rtvTrackerState = status.state;
       if (article.isLive) card.dataset.rtvTrackerLive = "true";
       else delete card.dataset.rtvTrackerLive;
-      ensureMarker(card, status.state, article.isLive, hasVisibleNativeLiveBadge(card));
+      ensureLiveMarker(card, article.isLive, hasVisibleNativeLiveBadge(card));
     }
     for (const element of [...article.titleElements, ...article.imageElements]) {
       element.dataset.rtvTrackerState = status.state;
@@ -30,21 +30,14 @@ export function renderArticles(articles: ExtractedArticle[], statuses: ArticleSt
   }
 }
 
-function ensureMarker(card: HTMLElement, state: ArticleStatus["state"], isLive: boolean, hasNativeLive: boolean): void {
+function ensureLiveMarker(card: HTMLElement, isLive: boolean, hasNativeLive: boolean): void {
   card.querySelectorAll("[data-rtv-tracker-owned='true']").forEach((element) => element.remove());
-  if (state === "new" && !isLive) return;
+  if (!isLive || hasNativeLive) return;
   const marker = document.createElement("span");
   marker.dataset.rtvTrackerOwned = "true";
   marker.className = "rtv-tracker-marker";
-  if (isLive && !hasNativeLive) {
-    marker.textContent = "V živo";
-    marker.dataset.rtvTrackerMarker = "live";
-  } else if (state === "opened") {
-    marker.textContent = "Odprto";
-    marker.dataset.rtvTrackerMarker = "opened";
-  } else {
-    return;
-  }
+  marker.textContent = "V živo";
+  marker.dataset.rtvTrackerMarker = "live";
   const target = card.querySelector("h1, h2, h3, h4") ?? card.firstElementChild ?? card;
   target.insertAdjacentElement("afterbegin", marker);
 }

@@ -47,5 +47,5 @@ jobs:
           else
             gh release create "$TAG_NAME" release/rtv-shadap-*.zip \
               --title "RTV Shadap $TAG_NAME" \
-              --notes "Use rtv-shadap-vX.Y.Z.zip for manual unpacked installation. Use rtv-shadap-vX.Y.Z-webstore.zip for Chrome Web Store upload."
+              --notes "Use rtv-shadap-$TAG_NAME.zip for manual unpacked installation. Use rtv-shadap-$TAG_NAME-webstore.zip for Chrome Web Store upload."
           fi

@@ -1,6 +1,6 @@
 # RTV Shadap
 
-RTV Shadap je Manifest V3 razširitev za Chrome in Brave, ki deluje samo na naslovnici `https://www.rtvslo.si/`. Utiša že videne RTV novice, odstrani moteče promocijske bloke in pusti novim naslovom, da izstopijo.
+RTV Shadap je Manifest V3 razširitev za Chrome in Brave, ki na vseh straneh `https://www.rtvslo.si/*` ročno posivi novice, ki jih želiš označiti kot že pregledane. V popupu pritisneš velik gumb, vse novice na trenutni strani postanejo sive, isti članki pa ostanejo sivi tudi drugje na RTV SLO.
 
 Razširitev ne uporablja strežnika, zunanjih API-jev, analitike ali telemetrije. Vsa zgodovina je shranjena lokalno v `chrome.storage.local` posameznega brskalnika.
 
@@ -13,12 +13,14 @@ Ta projekt je bil razvit skozi iterativno delo z LLM agentom. Za prihodnje vzdr�
 
 ## Kako deluje
 
-- Content script se takoj ustavi, če stran ni natančno RTV SLO naslovnica.
+- Content script deluje na vseh straneh `www.rtvslo.si` in na vsaki strani poišče RTV članke ter medijske kartice.
 - Extractor pregleda semantične elemente, preveri samo verjetne RTV članke in uporabi stabilen ključ iz številčnega ID-ja na koncu URL-ja, na primer `rtv:704321`.
-- Service worker je edini pisec v `chrome.storage.local`. Vodi zgodovino, odprte novice in pending obiske za več tabov.
-- Novica postane `Že videno` šele ob zaključku obiska, ne ob samem renderju.
-- Klik, Cmd/Ctrl klik, middle click in Enter na povezavi takoj označijo novico kot `Odprto`.
-- Novice z močnim signalom `V živo`, `v zivo` ali `LIVE` ostanejo vizualno polno poudarjene, tudi če so že videne ali odprte.
+- Service worker je edini pisec v `chrome.storage.local`.
+- Nalaganje, zapiranje, osveževanje in zapuščanje strani ne spreminjajo zgodovine. Tudi kliki na članke se ne beležijo.
+- Samo popup gumb `Do the magic` doda trenutno najdene članke v trajno lokalno zgodovino.
+- Stabilni ključ pomeni, da ista ročno označena novica ostane siva na naslovnici, kategorijah in drugih RTV straneh.
+- Novice z močnim signalom `V živo`, `v zivo` ali `LIVE` ostanejo vizualno polno poudarjene tudi, če so v zgodovini.
+- Izbrani moteči promocijski bloki se še naprej skrivajo samo na natančni RTV naslovnici.
 
 ## DOM audit
 
@@ -137,13 +139,15 @@ pnpm watch
 
 ## Ročni testni scenariji
 
-1. Ponastavi zgodovino v popupu in odpri `https://www.rtvslo.si/`; navadne novice morajo ostati polno vidne.
-2. Zapri naslovnico in jo odpri znova; prej najdene novice morajo biti `Že videno`.
-3. Odpri novico z navadnim klikom, Ctrl/Cmd klikom, middle clickom in Enter; vse podvojene predstavitve iste novice morajo postati `Odprto`.
-4. Če je ista novica v veliki kartici in stranskem stolpcu, mora imeti povsod enako stanje.
-5. Kartica z izrecnim `V živo` ali `LIVE` signalom ne sme biti zatemnjena.
-6. V DevTools dodaj mock kartico z veljavnim RTV URL-jem; observer jo mora zaznati brez reloada.
-7. Izklopi razširitev v popupu; vsi custom markerji in zatemnitve morajo izginiti.
+1. Pritisni `Reset` in odpri `https://www.rtvslo.si/`; novice morajo ostati polno vidne tudi po reloadu ali ponovnem odprtju taba.
+2. Klikni navadno novico in se vrni; klik sam je ne sme posiviti.
+3. V popupu pritisni `Do the magic`; vse najdene navadne novice morajo takoj postati sive.
+4. Odpri kategorijo, na primer `/slovenija`; prej označeni isti članki morajo ostati sivi, nove kartice pa polno vidne.
+5. Pritisni gumb tudi na kategorijski strani; njene novice morajo ostati sive po reloadu in na drugih RTV straneh.
+6. Če je ista novica v veliki kartici in stranskem stolpcu, mora imeti povsod enako stanje.
+7. Kartica z izrecnim `V živo` ali `LIVE` signalom ne sme biti zatemnjena.
+8. Izklopi razširitev; vsi custom markerji in zatemnitve morajo izginiti, gumb za ročno označevanje pa mora biti onemogočen.
+9. Pritisni `Reset`; vse ročno označene novice morajo ponovno postati polno vidne.
 
 ## Projektna drevesna struktura
 
@@ -159,4 +163,4 @@ tests/
 
 ## Preostala ročna negotovost
 
-Po namestitvi je treba na živi RTV naslovnici potrditi najprimernejše selektorje za najmanjši varen container kartice in morebitne native live badge class/attribute signale. Logika je pripravljena tako, da se ti selectorji lahko dopolnijo na enem mestu.
+Po namestitvi je treba na živi naslovnici in glavnih kategorijah potrditi najprimernejše selektorje za najmanjši varen container kartice in morebitne native live badge class/attribute signale. Logika je pripravljena tako, da se ti selectorji lahko dopolnijo na enem mestu.

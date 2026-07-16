@@ -9,29 +9,32 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 
 ## Product Invariants
 
-- RTV Shadap exists to make genuinely new RTV SLO homepage stories pop out by quieting already-seen/opened stories.
-- The extension must remain limited to the RTV SLO homepage workflow.
+- RTV Shadap is a manual read-state tool for news cards across `https://www.rtvslo.si/*`.
+- Merely loading, viewing, closing, refreshing, or leaving an RTV page must never add articles to history.
+- Clicking an article must never add it to history.
+- Only the popup action `Do the magic` may mark the currently extracted page articles as seen.
+- A manually marked article must render as seen everywhere on RTV SLO where the same stable article key appears.
+- Manually marked history remains local and persistent until the user resets it or removes extension data; do not expire or prune it automatically.
+- Keep live stories visually prominent even when their stable key is in history.
+- The enable switch controls both rendering and manual marking. When disabled, do not write article history.
+- Homepage cleanup remains limited to the exact RTV SLO homepage. Do not turn it into a generic ad blocker.
 - Do not add servers, analytics, telemetry, ads, tracking, remote code, or external APIs.
 - Do not use RTV SLO logo assets as extension icons.
-- Keep live stories visually prominent.
-- Same-tab article clicks must mark only that article as opened and abandon the homepage session. They must not mark all homepage articles as seen.
-- Closing the homepage tab commits the homepage session as seen.
-- Same-tab homepage refreshes/replacements must not commit the previous session, because RTV can auto-refresh and that must not make newly injected stories seen.
-- Closing separate article tabs must not affect homepage state.
 
 ## Code Orientation
 
-- `src/content/content-script.ts`: homepage controller, mutation scanning, click/lifecycle handling.
-- `src/background/session-manager.ts`: session state rules; add tests here for lifecycle changes.
-- `src/background/service-worker.ts`: Chrome runtime/tab message routing.
-- `src/content/extractor.ts`: RTV article/media extraction.
-- `src/content/site-cleanup.ts`: narrow RTV homepage cleanup rules.
-- `src/content/content.css`: visual dimming/stripe UX.
-- `src/popup/`: popup switch and reset history.
+- `src/content/content-script.ts`: all-RTV-page controller, mutation scanning, rendering, and manual page-mark action.
+- `src/background/history-manager.ts`: manual history transitions and status classification.
+- `src/background/service-worker.ts`: the only writer to `chrome.storage.local` and runtime message router.
+- `src/background/repository.ts`: storage normalization and serialized mutations.
+- `src/content/extractor.ts`: RTV article/media extraction and stable-key grouping.
+- `src/content/site-cleanup.ts`: narrow exact-homepage cleanup rules.
+- `src/content/content.css`: seen/live visual treatment.
+- `src/popup/`: enable switch, large manual page-mark button, and reset history.
 
 ## Change Rules
 
-- Prefer small, targeted changes that preserve the user's browsing workflow.
+- Prefer small, targeted changes that preserve the manual-only history rule.
 - Add or update tests for behavior changes.
 - If RTV DOM changes, ask for or create a fresh sanitized fixture and update extractor tests.
 - Do not broaden selectors or host permissions casually.

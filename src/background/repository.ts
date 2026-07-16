@@ -1,11 +1,10 @@
-import { MAX_HISTORY_RECORDS, SCHEMA_VERSION, STORAGE_KEY } from "../shared/constants";
+import { SCHEMA_VERSION, STORAGE_KEY } from "../shared/constants";
 import { storageGet, storageSet } from "../shared/chrome-api";
-import type { ArticleHistoryRecord, ArticleSnapshot, PendingSession, StorageState } from "../shared/models";
+import type { ArticleHistoryRecord, ArticleSnapshot, StorageState } from "../shared/models";
 
 export const emptyState = (): StorageState => ({
   schemaVersion: SCHEMA_VERSION,
   history: {},
-  pendingSessions: {},
   settings: { enabled: true }
 });
 
@@ -35,7 +34,6 @@ export function normalizeState(value: unknown): StorageState {
   return {
     schemaVersion: SCHEMA_VERSION,
     history: isRecord(state.history) ? state.history as Record<string, ArticleHistoryRecord> : {},
-    pendingSessions: isRecord(state.pendingSessions) ? state.pendingSessions as Record<string, PendingSession> : {},
     settings: { enabled: state.settings?.enabled !== false }
   };
 }
@@ -61,29 +59,6 @@ export function upsertSeenRecord(
       lastSeenAt: timestamp
     };
   }
-}
-
-export function upsertOpenedRecord(
-  history: Record<string, ArticleHistoryRecord>,
-  article: ArticleSnapshot,
-  timestamp: number
-): void {
-  upsertSeenRecord(history, article, timestamp);
-  const record = history[article.key];
-  if (!record) return;
-  record.openedAt = record.openedAt ?? timestamp;
-  record.lastOpenedAt = timestamp;
-}
-
-export function pruneHistory(history: Record<string, ArticleHistoryRecord>, limit = MAX_HISTORY_RECORDS): void {
-  const records = Object.values(history);
-  if (records.length <= limit) return;
-  records
-    .sort((a, b) => b.lastSeenAt - a.lastSeenAt)
-    .slice(limit)
-    .forEach((record) => {
-      delete history[record.key];
-    });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

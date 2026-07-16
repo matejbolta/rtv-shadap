@@ -6,20 +6,6 @@ export interface ArticleSnapshot {
   isLive: boolean;
 }
 
-export interface SessionArticle extends ArticleSnapshot {
-  firstDiscoveredAt: number;
-  lastDiscoveredAt: number;
-}
-
-export interface PendingSession {
-  tabId: number;
-  sessionId: string;
-  startedAt: number;
-  updatedAt: number;
-  articles: Record<string, SessionArticle>;
-  abandonedAt?: number;
-}
-
 export interface ArticleHistoryRecord {
   key: string;
   articleId?: string;
@@ -27,8 +13,6 @@ export interface ArticleHistoryRecord {
   lastTitle: string;
   firstSeenAt: number;
   lastSeenAt: number;
-  openedAt?: number;
-  lastOpenedAt?: number;
 }
 
 export interface ExtensionSettings {
@@ -36,13 +20,12 @@ export interface ExtensionSettings {
 }
 
 export interface StorageState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   history: Record<string, ArticleHistoryRecord>;
-  pendingSessions: Record<string, PendingSession>;
   settings: ExtensionSettings;
 }
 
-export type ArticleVisualState = "new" | "seen" | "opened";
+export type ArticleVisualState = "new" | "seen";
 
 export interface ArticleStatus {
   key: string;
