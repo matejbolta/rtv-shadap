@@ -4,13 +4,21 @@ import { queryTabs, sendTabMessage } from "../shared/chrome-api";
 import { HOMEPAGE_ORIGIN } from "../shared/constants";
 import { Repository } from "./repository";
 import { getStatuses, markArticlesSeen } from "./history-manager";
+import { BrowserSyncManager } from "./sync-manager";
 
 const repository = new Repository();
+const syncManager = new BrowserSyncManager(repository, broadcastHistoryChanged);
+
+void syncManager.initialize().catch(() => undefined);
 
 chrome.runtime.onInstalled.addListener(() => {
   void repository.mutate((state) => {
     state.settings.enabled = state.settings.enabled !== false;
-  });
+  }).then(() => syncManager.initialize()).catch(() => undefined);
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "sync") void syncManager.handleStorageChange(changes).catch(() => undefined);
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
@@ -32,14 +40,18 @@ async function handleMessage(message: unknown): Promise<RuntimeResponse> {
             markedCount: message.articles.length,
             statuses: getStatuses(state, message.articles)
           };
-        }).then((response) => {
-          if (response.ok) broadcastHistoryChanged();
+        }).then(async (response) => {
+          if (response.ok) {
+            broadcastHistoryChanged();
+            await syncManager.pushLocalChanges().catch(() => undefined);
+          }
           return response;
         });
       case "GET_SETTINGS":
         return repository.read().then((state) => ({
           ok: true as const,
-          enabled: state.settings.enabled
+          enabled: state.settings.enabled,
+          syncMode: state.settings.syncMode
         }));
       case "GET_STATUSES":
         return repository.read().then((state) => ({
@@ -55,13 +67,26 @@ async function handleMessage(message: unknown): Promise<RuntimeResponse> {
           void broadcastToRtvTabs({ type: "SETTINGS_CHANGED", enabled: message.enabled });
           return response;
         });
-      case "RESET_HISTORY":
+      case "SET_SYNC_MODE":
+        if (message.syncMode !== "browser" && message.syncMode !== "local") {
+          return { ok: false, error: "Invalid sync mode" };
+        }
         return repository.mutate((state) => {
-          state.history = {};
-          return { ok: true as const, enabled: state.settings.enabled };
-        }).then((response) => {
-          broadcastHistoryChanged();
+          state.settings.syncMode = message.syncMode;
+          return {
+            ok: true as const,
+            enabled: state.settings.enabled,
+            syncMode: state.settings.syncMode
+          };
+        }).then(async (response) => {
+          if (response.syncMode === "browser") await syncManager.initialize().catch(() => undefined);
           return response;
+        });
+      case "RESET_HISTORY":
+        return syncManager.resetHistory().then(async () => {
+          const state = await repository.read();
+          broadcastHistoryChanged();
+          return { ok: true as const, enabled: state.settings.enabled };
         });
       default:
         return { ok: false, error: "Unsupported message" };

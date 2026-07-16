@@ -47,3 +47,33 @@ export function storageSet(items: Record<string, unknown>): Promise<void> {
     });
   });
 }
+
+export function storageSyncGet(keys?: string | string[] | Record<string, unknown> | null): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(keys ?? null, (items) => {
+      const error = chrome.runtime.lastError;
+      if (error) reject(new Error(error.message));
+      else resolve(items);
+    });
+  });
+}
+
+export function storageSyncSet(items: Record<string, unknown>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set(items, () => {
+      const error = chrome.runtime.lastError;
+      if (error) reject(new Error(error.message));
+      else resolve();
+    });
+  });
+}
+
+export function restrictSyncStorageAccess(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" }, () => {
+      const error = chrome.runtime.lastError;
+      if (error) reject(new Error(error.message));
+      else resolve();
+    });
+  });
+}

@@ -1,15 +1,17 @@
-import type { ArticleSnapshot, ArticleStatus } from "./models";
+import type { ArticleSnapshot, ArticleStatus, SyncMode } from "./models";
 
 export type RuntimeMessage =
   | { type: "MARK_ARTICLES_SEEN"; articles: ArticleSnapshot[] }
   | { type: "GET_SETTINGS" }
   | { type: "GET_STATUSES"; articles: ArticleSnapshot[] }
   | { type: "SET_ENABLED"; enabled: boolean }
+  | { type: "SET_SYNC_MODE"; syncMode: Exclude<SyncMode, "ask"> }
   | { type: "RESET_HISTORY" };
 
 export type RuntimeResponse =
   | { ok: true; enabled: boolean; statuses: ArticleStatus[] }
   | { ok: true; enabled: boolean; markedCount: number; statuses: ArticleStatus[] }
+  | { ok: true; enabled: boolean; syncMode: SyncMode }
   | { ok: true; enabled: boolean }
   | { ok: false; error: string };
 

@@ -14,23 +14,29 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 - Clicking an article must never add it to history.
 - Only the popup action `Do the magic` may mark the currently extracted page articles as seen.
 - A manually marked article must render as seen everywhere on RTV SLO where the same stable article key appears.
-- Manually marked history remains local and persistent until the user resets it or removes extension data; do not expire or prune it automatically.
+- Full manually marked history remains local and persistent until the user resets it or removes extension data; do not expire or prune local history automatically.
+- Browser-native device sync is opt-in. Never read or write `chrome.storage.sync` before the user chooses browser sync.
+- Sync only compact article keys and day-level timestamps. Never sync titles, canonical URLs, page HTML, or analytics.
+- The synchronized ledger may retain only the newest 3,000 keys to respect browser quotas; this must never prune full local history.
+- When browser sync is enabled, Reset is global and must use the reset generation to stop stale offline devices from resurrecting history.
 - Keep live stories visually prominent even when their stable key is in history.
 - The enable switch controls both rendering and manual marking. When disabled, do not write article history.
 - Homepage cleanup remains limited to the exact RTV SLO homepage. Do not turn it into a generic ad blocker.
-- Do not add servers, analytics, telemetry, ads, tracking, remote code, or external APIs.
+- Do not add developer-operated servers, analytics, telemetry, ads, tracking, remote code, OAuth, or external APIs. Browser-native sync is the only approved transmission path.
 - Do not use RTV SLO logo assets as extension icons.
 
 ## Code Orientation
 
 - `src/content/content-script.ts`: all-RTV-page controller, mutation scanning, rendering, and manual page-mark action.
 - `src/background/history-manager.ts`: manual history transitions and status classification.
-- `src/background/service-worker.ts`: the only writer to `chrome.storage.local` and runtime message router.
+- `src/background/service-worker.ts`: runtime router and coordinator for the only local/sync storage writers.
+- `src/background/sync-manager.ts`: compact browser-sync ledger, convergence, quota limits, and reset generations.
 - `src/background/repository.ts`: storage normalization and serialized mutations.
 - `src/content/extractor.ts`: RTV article/media extraction and stable-key grouping.
 - `src/content/site-cleanup.ts`: narrow exact-homepage cleanup rules.
 - `src/content/content.css`: seen/live visual treatment.
 - `src/popup/`: enable switch, large manual page-mark button, and reset history.
+- `src/options/`: persistent browser-sync/local-only preference.
 
 ## Change Rules
 
@@ -39,6 +45,7 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 - If RTV DOM changes, ask for or create a fresh sanitized fixture and update extractor tests.
 - Do not broaden selectors or host permissions casually.
 - Do not rename storage keys without an explicit migration.
+- Treat changes to sync payloads, consent, retention, or reset semantics as privacy-sensitive and update `PRIVACY.md`, `STORE_SUBMISSION.md`, and the handoff.
 - Keep `package.json` and `public/manifest.json` versions aligned.
 - For user-visible extension changes, bump the version before packaging or Web Store upload.
 - Docs-only changes do not require a version bump.

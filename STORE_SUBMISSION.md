@@ -2,10 +2,10 @@
 
 Use `release/rtv-shadap-vX.Y.Z-webstore.zip` for Chrome Web Store upload. Its `manifest.json` is at the zip root.
 
-## Version 0.2.6 update notes
+## Version 0.3.0 update notes
 
 ```text
-RTV Shadap now uses a fully manual workflow. Press “Do the magic” to dim every story on the current RTV SLO page; the same stories remain dimmed wherever they appear across the site. Loading, closing, refreshing, or leaving a page no longer marks anything automatically. This update also adds all-site support, a darker and more consistent seen treatment, a simplified popup, and a green success flash after marking completes.
+RTV Shadap can now synchronize manually marked stories across devices through the browser's built-in sync. Sync is optional, requires no RTV Shadap account or OAuth, and transfers only compact article IDs and day-level timestamps. Full article history remains local. A new Options page lets users switch between browser sync and local-only mode.
 ```
 
 ## Listing
@@ -19,7 +19,7 @@ RTV Shadap
 Short description:
 
 ```text
-Manually dim RTV SLO stories on the current page and keep them dimmed everywhere on the site.
+Manually dim RTV SLO stories and optionally sync their read state across your devices.
 ```
 
 Detailed description:
@@ -27,9 +27,9 @@ Detailed description:
 ```text
 RTV Shadap makes RTV SLO news pages easier to scan.
 
-Press the popup button to dim all stories currently shown on an RTV SLO page. The extension remembers those stories locally, so the same articles stay dimmed when they appear on the homepage, category pages, or elsewhere on RTV SLO. Nothing is marked automatically when you load, close, or leave a page. Live stories remain visually prominent, and selected promotional sections are hidden on the homepage.
+Press the popup button to dim all stories currently shown on an RTV SLO page. The extension remembers those stories, so the same articles stay dimmed when they appear on the homepage, category pages, or elsewhere on RTV SLO. Nothing is marked automatically when you load, close, or leave a page. Live stories remain visually prominent, and selected promotional sections are hidden on the homepage.
 
-The extension only runs on https://www.rtvslo.si/. It has no server, analytics, tracking, ads, or telemetry. Manually marked article history is stored locally in the browser using chrome.storage.local.
+Optional device sync uses the browser's built-in sync service and requires no RTV Shadap account or OAuth. Full history stays local. Only compact article IDs and day-level timestamps are placed in browser sync after the user explicitly opts in. The extension has no developer-operated server, analytics, tracking, ads, or telemetry.
 
 RTV Shadap is an independent browser extension and is not affiliated with RTV SLO.
 ```
@@ -55,7 +55,7 @@ Unlisted first, public later if desired.
 ## Single purpose
 
 ```text
-RTV Shadap lets users manually dim the stories on any RTV SLO news page and recognizes the same stories across the site.
+RTV Shadap lets users manually dim stories on RTV SLO, recognize them across the site, and optionally synchronize that read state through browser-native device sync.
 ```
 
 ## Permission justification
@@ -63,7 +63,7 @@ RTV Shadap lets users manually dim the stories on any RTV SLO news page and reco
 `storage`:
 
 ```text
-Used to store article IDs that the user manually marked from an RTV SLO page. No data is transmitted to any server.
+Used to store full manual article history locally and, only after explicit opt-in, a compact ledger of article IDs and day-level timestamps in chrome.storage.sync. RTV Shadap operates no server; the developer cannot access browser-sync identities or users' synchronized history.
 ```
 
 `https://www.rtvslo.si/*` host permission:
@@ -83,13 +83,13 @@ No remote code is used. All extension code is packaged in the extension bundle.
 Data collection:
 
 ```text
-The extension does not collect, transmit, sell, or share user data.
+The developer does not collect, receive, sell, or share user data. After explicit opt-in, the extension places compact article IDs and day-level timestamps in chrome.storage.sync solely to provide cross-device read-state synchronization through the user's browser provider.
 ```
 
 Data usage checkboxes:
 
 ```text
-Leave all user-data category checkboxes unchecked.
+Disclose `Website content` because the extension processes RTV article identifiers/titles to provide its manual read-state feature. Do not select personally identifiable information, authentication information, personal communications, location, financial information, health information, or advertising-related categories. The synchronized payload contains only compact article IDs and day-level timestamps.
 ```
 
 Certification checkboxes:
@@ -104,10 +104,10 @@ Privacy policy URL:
 https://github.com/matejbolta/rtv-shadap/blob/main/PRIVACY.md
 ```
 
-Local data:
+Data handling:
 
 ```text
-The extension stores article IDs, manual seen status, and timestamps locally in chrome.storage.local so it can recognize the same story across RTV SLO pages. This data remains on the user's device.
+The extension stores stable article IDs, canonical URLs, last known titles, and timestamps locally in chrome.storage.local. If the user explicitly enables device sync, only compact article IDs and day-level timestamps are written to chrome.storage.sync. The developer has no server and no access to either local or synchronized history. Sync can be declined in the one-time prompt or changed later in extension Options.
 ```
 
 ## Test instructions for reviewers
@@ -115,15 +115,19 @@ The extension stores article IDs, manual seen status, and timestamps locally in 
 ```text
 1. Install the extension.
 2. Open https://www.rtvslo.si/.
-3. Open the extension popup and press “Do the magic”.
+3. Open the extension popup and press “Do the magic”. The first use presents a one-time choice between browser sync and local-only mode; either choice continues without an RTV Shadap login.
 4. The stories on that page should become dimmed immediately.
 5. Open another RTV SLO page or category. The same stories should remain dimmed wherever they appear, while unmarked stories stay prominent.
 6. Merely loading, closing, or leaving a page must not mark stories automatically.
-7. Open the extension popup to reset local history if needed.
+7. Open the extension's Options page to change the device-sync choice.
+8. With browser sync enabled on two browser profiles in the same sync environment, mark a page on one device and confirm matching stories become seen on the other after browser synchronization.
+9. Open the extension popup to reset history. With sync enabled, the reset propagates to other opted-in devices.
 ```
 
-## Assets still needed in the dashboard
+## Dashboard assets
 
 - Store icon: use `public/icons/icon128.png`.
-- Screenshots: capture the RTV homepage with visible dimmed/seen stories and the extension popup.
+- Homepage screenshot: use `release/store-assets/rtv-shadap-homepage-1280x800.jpg`.
+- Current popup screenshot: use `release/store-assets/rtv-shadap-popup-1280x800.jpg`.
+- Device-sync Options screenshot: use `release/store-assets/rtv-shadap-sync-options-1280x800.jpg`.
 - Optional promotional tile images can be skipped unless the dashboard requires them.

@@ -1,4 +1,5 @@
 import type { RuntimeMessage, RuntimeResponse, TabResponse } from "../shared/messages";
+import type { SyncMode } from "../shared/models";
 import { queryTabs, sendRuntimeMessage, sendTabMessage } from "../shared/chrome-api";
 
 const enabledSwitch = document.querySelector<HTMLButtonElement>("#enabled-switch");
@@ -7,9 +8,10 @@ const resetButton = document.querySelector<HTMLButtonElement>("#reset");
 const enabledLabel = document.querySelector<HTMLElement>("#enabled-label");
 
 let enabled = true;
+let syncMode: SyncMode = "ask";
 let successTimer: number | undefined;
 
-void refresh();
+const settingsReady = refresh();
 
 enabledSwitch?.addEventListener("click", () => {
   const nextEnabled = enabledSwitch.getAttribute("aria-checked") !== "true";
@@ -25,16 +27,15 @@ markPageButton?.addEventListener("click", () => {
 });
 
 resetButton?.addEventListener("click", () => {
-  if (!confirm("Reset RTV Shadap history?")) return;
-  resetButton.disabled = true;
-  void sendMessage({ type: "RESET_HISTORY" }).finally(() => {
-    if (resetButton) resetButton.disabled = false;
-  });
+  void resetHistory();
 });
 
 async function refresh(): Promise<void> {
   const settings = await sendMessage({ type: "GET_SETTINGS" });
-  if (settings.ok) setEnabledUi(settings.enabled);
+  if (settings.ok) {
+    setEnabledUi(settings.enabled);
+    if ("syncMode" in settings) syncMode = settings.syncMode;
+  }
 }
 
 async function setEnabled(nextEnabled: boolean): Promise<void> {
@@ -47,7 +48,10 @@ async function setEnabled(nextEnabled: boolean): Promise<void> {
 }
 
 async function markCurrentPageSeen(): Promise<void> {
-  if (!enabled || !markPageButton) return;
+  if (!markPageButton) return;
+  await settingsReady;
+  if (!enabled) return;
+  await ensureSyncChoice();
   window.clearTimeout(successTimer);
   markPageButton.classList.remove("is-success");
   markPageButton.disabled = true;
@@ -66,6 +70,29 @@ async function markCurrentPageSeen(): Promise<void> {
     markPageButton.classList.remove("is-working");
     markPageButton.disabled = !enabled;
   }
+}
+
+async function ensureSyncChoice(): Promise<void> {
+  if (syncMode !== "ask") return;
+  const useBrowserSync = confirm(
+    "Sync marked RTV article IDs across your devices using your browser's built-in sync? "
+    + "No RTV Shadap account is needed, and no data is sent to us. Choose Cancel to keep this device local-only."
+  );
+  const nextMode = useBrowserSync ? "browser" : "local";
+  const response = await sendMessage({ type: "SET_SYNC_MODE", syncMode: nextMode });
+  if (response.ok && "syncMode" in response) syncMode = response.syncMode;
+  else syncMode = "local";
+}
+
+async function resetHistory(): Promise<void> {
+  await settingsReady;
+  const message = syncMode === "browser"
+    ? "Reset RTV Shadap history on all synced devices?"
+    : "Reset RTV Shadap history on this device?";
+  if (!confirm(message) || !resetButton) return;
+  resetButton.disabled = true;
+  await sendMessage({ type: "RESET_HISTORY" });
+  resetButton.disabled = false;
 }
 
 function flashSuccess(): void {

@@ -17,6 +17,8 @@ async function copyStatic() {
   await cp("src/content/content.css", "dist/content.css");
   await cp("src/popup/popup.html", "dist/popup.html");
   await cp("src/popup/popup.css", "dist/popup.css");
+  await cp("src/options/options.html", "dist/options.html");
+  await cp("src/options/options.css", "dist/options.css");
 }
 
 async function run() {
@@ -27,7 +29,8 @@ async function run() {
   const entries = [
     { entryPoints: ["src/background/service-worker.ts"], outfile: "dist/service-worker.js" },
     { entryPoints: ["src/content/content-script.ts"], outfile: "dist/content-script.js" },
-    { entryPoints: ["src/popup/popup.ts"], outfile: "dist/popup.js" }
+    { entryPoints: ["src/popup/popup.ts"], outfile: "dist/popup.js" },
+    { entryPoints: ["src/options/options.ts"], outfile: "dist/options.js" }
   ];
   if (watch) {
     const contexts = await Promise.all(entries.map((entry) => context({ ...common, ...entry })));

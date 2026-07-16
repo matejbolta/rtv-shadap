@@ -1,8 +1,8 @@
 # RTV Shadap
 
-RTV Shadap je Manifest V3 razširitev za Chrome in Brave, ki na vseh straneh `https://www.rtvslo.si/*` ročno posivi novice, ki jih želiš označiti kot že pregledane. V popupu pritisneš velik gumb, vse novice na trenutni strani postanejo sive, isti članki pa ostanejo sivi tudi drugje na RTV SLO.
+RTV Shadap je Manifest V3 razširitev za Chrome in Brave, ki na vseh straneh `https://www.rtvslo.si/*` ročno posivi novice, ki jih želiš označiti kot že pregledane. V popupu pritisneš velik gumb, vse novice na trenutni strani postanejo sive, isti članki pa ostanejo sivi tudi drugje na RTV SLO in se lahko sinhronizirajo med napravami.
 
-Razširitev ne uporablja strežnika, zunanjih API-jev, analitike ali telemetrije. Vsa zgodovina je shranjena lokalno v `chrome.storage.local` posameznega brskalnika.
+Razširitev nima svojega strežnika, računa, zunanjega API-ja, analitike ali telemetrije. Celotna zgodovina ostane v `chrome.storage.local`; če uporabnik izrecno vklopi sinhronizacijo, se prek vgrajenega browser synca prenese samo kompakten seznam ID-jev novic in dnevov označitve.
 
 ## Projektni kontekst za agente
 
@@ -15,12 +15,22 @@ Ta projekt je bil razvit skozi iterativno delo z LLM agentom. Za prihodnje vzdr�
 
 - Content script deluje na vseh straneh `www.rtvslo.si` in na vsaki strani poišče RTV članke ter medijske kartice.
 - Extractor pregleda semantične elemente, preveri samo verjetne RTV članke in uporabi stabilen ključ iz številčnega ID-ja na koncu URL-ja, na primer `rtv:704321`.
-- Service worker je edini pisec v `chrome.storage.local`.
+- Service worker koordinira edina pisca v `chrome.storage.local` in `chrome.storage.sync`.
 - Nalaganje, zapiranje, osveževanje in zapuščanje strani ne spreminjajo zgodovine. Tudi kliki na članke se ne beležijo.
 - Samo popup gumb `Do the magic` doda trenutno najdene članke v trajno lokalno zgodovino.
 - Stabilni ključ pomeni, da ista ročno označena novica ostane siva na naslovnici, kategorijah in drugih RTV straneh.
+- Ob prvem pritisku na `Do the magic` uporabnik enkrat izbere browser sync ali local-only. RTV Shadap ne uporablja prijave ali lastnega računa.
+- Celotna zgodovina ostane lokalna in brez samodejnega poteka; browser sync zaradi kvote vsebuje samo najnovejših 3.000 kompaktnih ključev.
 - Novice z močnim signalom `V živo`, `v zivo` ali `LIVE` ostanejo vizualno polno poudarjene tudi, če so v zgodovini.
 - Izbrani moteči promocijski bloki se še naprej skrivajo samo na natančni RTV naslovnici.
+
+## Sinhronizacija med napravami
+
+- Chrome uporablja obstoječi Chrome Sync profil; Brave uporablja obstoječo Brave Sync verigo. RTV Shadap ne prikazuje prijave in ne pozna uporabnikove identitete.
+- Vsaka naprava mora enkrat izrecno izbrati `Sync across devices`. Izbiro je pozneje mogoče spremeniti prek strani z možnostmi razširitve.
+- Naprave v istem browser sync okolju združijo ročno označene ključe. Chrome in Brave med seboj nimata skupnega sync okolja.
+- Spremembe, narejene brez povezave, se po ponovni povezavi združijo. Ko je sync vključen, `Reset` počisti zgodovino na vseh vključenih napravah.
+- Naslovi, polni URL-ji, vsebina strani in lokalna celotna zgodovina se ne sinhronizirajo.
 
 ## DOM audit
 
@@ -148,6 +158,8 @@ pnpm watch
 7. Kartica z izrecnim `V živo` ali `LIVE` signalom ne sme biti zatemnjena.
 8. Izklopi razširitev; vsi custom markerji in zatemnitve morajo izginiti, gumb za ročno označevanje pa mora biti onemogočen.
 9. Pritisni `Reset`; vse ročno označene novice morajo ponovno postati polno vidne.
+10. Na dveh napravah v istem browser sync okolju vključi sync, na prvi označi stran in potrdi, da se isti ključi na drugi napravi posivijo.
+11. Na prvi napravi naredi globalni `Reset`; druga naprava ne sme ponovno uvesti stare zgodovine, tudi če je bila med resetom brez povezave.
 
 ## Projektna drevesna struktura
 
@@ -156,6 +168,7 @@ public/manifest.json
 scripts/build.mjs
 src/background/
 src/content/
+src/options/
 src/popup/
 src/shared/
 tests/

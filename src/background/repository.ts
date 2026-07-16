@@ -1,11 +1,12 @@
 import { SCHEMA_VERSION, STORAGE_KEY } from "../shared/constants";
 import { storageGet, storageSet } from "../shared/chrome-api";
-import type { ArticleHistoryRecord, ArticleSnapshot, StorageState } from "../shared/models";
+import type { ArticleHistoryRecord, ArticleSnapshot, StorageState, SyncMode } from "../shared/models";
 
 export const emptyState = (): StorageState => ({
   schemaVersion: SCHEMA_VERSION,
   history: {},
-  settings: { enabled: true }
+  settings: { enabled: true, syncMode: "ask" },
+  sync: { resetAt: 0 }
 });
 
 export class Repository {
@@ -34,7 +35,14 @@ export function normalizeState(value: unknown): StorageState {
   return {
     schemaVersion: SCHEMA_VERSION,
     history: isRecord(state.history) ? state.history as Record<string, ArticleHistoryRecord> : {},
-    settings: { enabled: state.settings?.enabled !== false }
+    settings: {
+      enabled: state.settings?.enabled !== false,
+      syncMode: normalizeSyncMode(state.settings?.syncMode)
+    },
+    sync: {
+      generation: typeof state.sync?.generation === "string" ? state.sync.generation : undefined,
+      resetAt: typeof state.sync?.resetAt === "number" ? state.sync.resetAt : 0
+    }
   };
 }
 
@@ -63,4 +71,8 @@ export function upsertSeenRecord(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeSyncMode(value: unknown): SyncMode {
+  return value === "browser" || value === "local" ? value : "ask";
 }

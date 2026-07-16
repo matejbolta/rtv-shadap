@@ -25,6 +25,19 @@ describe("manual-only product mode", () => {
     expect(contentScript).not.toContain("storageSet");
   });
 
+  it("uses browser-native sync without an extension account or identity permission", () => {
+    const manifest = JSON.parse(manifestText) as {
+      permissions?: string[];
+      options_ui?: { page?: string };
+    };
+    expect(popup).toContain("SET_SYNC_MODE");
+    expect(popup).toContain("browser's built-in sync");
+    expect(popup).toContain("history on all synced devices");
+    expect(serviceWorker).toContain("chrome.storage.onChanged");
+    expect(manifest.permissions).toEqual(["storage"]);
+    expect(manifest.options_ui?.page).toBe("options.html");
+  });
+
   it("loads on every path of the supported RTV origin", () => {
     const manifest = JSON.parse(manifestText) as { content_scripts?: Array<{ matches?: string[] }> };
     expect(manifest.content_scripts?.[0]?.matches).toEqual(["https://www.rtvslo.si/*"]);

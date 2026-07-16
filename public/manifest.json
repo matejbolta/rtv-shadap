@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "RTV Shadap",
-  "version": "0.2.6",
-  "description": "Ročno posivi novice na katerikoli strani RTV SLO in si jih zapomni povsod.",
+  "version": "0.3.0",
+  "description": "Ročno posivi RTV SLO novice in jih po želji sinhronizira med napravami.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.rtvslo.si/*"],
   "background": {
@@ -32,5 +32,9 @@
       "128": "icons/icon128.png"
     },
     "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   }
 }

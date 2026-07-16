@@ -15,14 +15,23 @@ export interface ArticleHistoryRecord {
   lastSeenAt: number;
 }
 
+export type SyncMode = "ask" | "browser" | "local";
+
 export interface ExtensionSettings {
   enabled: boolean;
+  syncMode: SyncMode;
+}
+
+export interface LocalSyncState {
+  generation?: string;
+  resetAt: number;
 }
 
 export interface StorageState {
-  schemaVersion: 2;
+  schemaVersion: 3;
   history: Record<string, ArticleHistoryRecord>;
   settings: ExtensionSettings;
+  sync: LocalSyncState;
 }
 
 export type ArticleVisualState = "new" | "seen";

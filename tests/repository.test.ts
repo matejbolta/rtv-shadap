@@ -45,7 +45,7 @@ describe("manual history behavior", () => {
     });
   });
 
-  it("migrates schema-one history while dropping obsolete pending sessions", () => {
+  it("migrates old history while adding local browser-sync preferences", () => {
     const state = normalizeState({
       schemaVersion: 1,
       history: {
@@ -62,8 +62,10 @@ describe("manual history behavior", () => {
       settings: { enabled: false }
     });
 
-    expect(state.schemaVersion).toBe(2);
+    expect(state.schemaVersion).toBe(3);
     expect(state.settings.enabled).toBe(false);
+    expect(state.settings.syncMode).toBe("ask");
+    expect(state.sync).toEqual({ resetAt: 0 });
     expect(state.history["rtv:1"]).toBeDefined();
     expect(state).not.toHaveProperty("pendingSessions");
     expect(getStatuses(state, [article(1)])[0]?.state).toBe("seen");
