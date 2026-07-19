@@ -2,8 +2,8 @@
 
 This document is the durable project memory for future coding agents.
 
-Last updated: 2026-07-16.
-Current source version: 0.3.0.
+Last updated: 2026-07-19.
+Current source version: 0.3.1.
 
 ## Start Here
 
@@ -37,40 +37,43 @@ The exact homepage also retains a narrow cleanup feature that hides selected RTV
 4. Seen state follows the stable article key across the site.
    A story marked anywhere must render as seen everywhere the same key appears under `www.rtvslo.si`.
 
-5. Full local history does not expire or prune automatically.
+5. Opened article content is never a card.
+   On an article-detail page, the title, hero media, caption, and prose must remain visually untouched. Related, sidebar, and lower news-list cards may still render as seen.
+
+6. Full local history does not expire or prune automatically.
    “Forever” means until Reset, extension-data removal, or uninstall. The 3,000-entry sync cap must never prune `chrome.storage.local`.
 
-6. Device sync is explicit and per device.
+7. Device sync is explicit and per device.
    Do not read or write the RTV Shadap sync payload until the user chooses browser sync. Declining must leave the normal manual feature fully usable in local-only mode.
 
-7. The sync payload is deliberately narrow.
+8. The sync payload is deliberately narrow.
    Sync compact stable keys and day-level seen timestamps only. Never sync titles, canonical URLs, page HTML, screenshots, click behavior, analytics, or identity data.
 
-8. Synced histories converge by union, while Reset wins over old offline state.
+9. Synced histories converge by union, while Reset wins over old offline state.
    Use the reset generation/timestamp design. A stale device must not resurrect pre-reset history. Marks genuinely made after the reset may survive and rejoin the shared ledger.
 
-9. Reset scope follows sync mode.
+10. Reset scope follows sync mode.
    In browser-sync mode, Reset is global for devices participating in the same browser sync environment. In local-only mode, Reset affects only that browser profile.
 
-10. The enable switch controls rendering and manual marking.
+11. The enable switch controls rendering and manual marking.
     When disabled, visual treatment and homepage cleanup disappear and the page-mark action cannot write history. The sync preference is separate from this switch.
 
-11. Live stories stay visually prominent.
+12. Live stories stay visually prominent.
     A live card may have a history record, but it must not be dimmed.
 
-12. The content script runs only on the supported origin.
+13. The content script runs only on the supported origin.
     Do not broaden permissions beyond `https://www.rtvslo.si/*` without an explicit product decision.
 
-13. Homepage cleanup stays homepage-only.
+14. Homepage cleanup stays homepage-only.
     Category and article pages get extraction/rendering, not broad page cleanup.
 
-14. No developer-operated server, telemetry, analytics, ads, tracking, remote code, OAuth, or external API.
+15. No developer-operated server, telemetry, analytics, ads, tracking, remote code, OAuth, or external API.
     Browser-native `chrome.storage.sync`, after consent, is the only approved transmission path.
 
-15. Do not use RTV SLO logos as extension icons.
+16. Do not use RTV SLO logos as extension icons.
     Current icons are original generated assets.
 
-16. Keep selectors conservative.
+17. Keep selectors conservative.
     A cleanup rule must never hide a real news card merely because it resembles a banner layout.
 
 ## Product Flow
@@ -129,6 +132,27 @@ The chosen design uses the browser's existing extension sync facility:
 - If browser sync itself is unavailable or disabled, the extension remains functional locally.
 
 This is intentionally not a custom cross-browser service. Supporting Chrome-to-Brave or unrelated browser profiles would require a separate identity/pairing and backend design, which is outside the approved scope.
+
+### Version 0.3.1 Article-page Boundary
+
+RTV article pages contain page-local controls such as `href="#"`. On a numeric article URL, resolving that fragment against the current page previously produced the current article key. A Google-preference control inside `<article class="article">` could therefore make the extractor classify the entire long-form article as a seen card.
+
+`identifyArticle` now rejects fragment-only and query-only references before URL resolution. This keeps opened article titles, hero media, captions, and prose untouched while preserving extraction of real related/sidebar cards with explicit RTV article URLs.
+
+### Version 0.3.1 Render Stability
+
+The live fallback marker used to be removed and recreated during every render. Because the mutation observer saw that child-list change at the card heading, one unrelated page mutation could start a permanent debounced rescan cycle on a page containing a live card.
+
+The marker is now idempotent: an unchanged render preserves the existing node, while a newly available native live badge removes the fallback. Title extraction strips extension-owned marker text, so rescanning cannot corrupt the headline or make live detection alternate between true and false. The observer also recognizes child-list changes made entirely from extension-owned nodes, and passive scans use a coalescing runner so rapid requests never overlap and collapse into at most one follow-up scan. Each scan renders once: the background response is authoritative, with local storage retained only as the failure fallback.
+
+Regression and stress coverage must preserve these properties:
+
+- a repeated unchanged live render produces no child-list mutation,
+- extracting again after rendering preserves the original live title and state,
+- one unrelated DOM mutation settles after one rescan,
+- extension-owned mutations are ignored but mixed site/extension mutations are not,
+- repeated requests while a scan is active never run concurrently,
+- failure does not permanently wedge the scan runner.
 
 ### Popup UX
 
@@ -203,7 +227,9 @@ The all-RTV-page controller:
 - handles `MARK_CURRENT_PAGE_SEEN` from the popup,
 - sends `MARK_ARTICLES_SEEN` to the service worker,
 - applies homepage cleanup only when pathname is exactly `/`,
-- removes rendering and cleanup when disabled.
+- removes rendering and cleanup when disabled,
+- coalesces passive rescan requests and renders once per scan,
+- ignores DOM mutations caused solely by extension-owned markers.
 
 It must not bind article-open tracking or page-lifecycle history handlers. It must not directly write local or sync storage.
 
@@ -257,6 +283,7 @@ All sync failures must leave the complete local history intact. A transient prov
 ### src/content/extractor.ts
 
 - identifies RTV article and RTV365 media links,
+- rejects page-local fragment/query controls that merely resolve back to the open article,
 - groups duplicate presentations by stable key,
 - finds title, media, and the smallest safe card element,
 - ignores content inside homepage-cleanup blocks.
@@ -512,7 +539,7 @@ Share URL:
 
     https://chromewebstore.google.com/detail/rtv-shadap/oeplikfkggjcbekgclpegnblalngbpai
 
-Published history existed through version 0.2.6 before this sync update. Version 0.3.0 is the current source release. Verify the Web Store dashboard, Git tag, and GitHub Release rather than assuming this document proves Store publication.
+Published history existed through version 0.2.6 before the sync update, and version 0.3.0 introduced browser-native sync. Version 0.3.1 is the current article-page-boundary patch source. Verify the Web Store dashboard, Git tag, and GitHub Release rather than assuming this document proves Store publication.
 
 ## Versioning and Release
 
@@ -546,6 +573,8 @@ Core coverage:
 - `tests/article-url.test.ts`: stable cross-page article/media identity,
 - `tests/extractor.test.ts`: duplicate grouping, fixture extraction, cleanup behavior, promo regression,
 - `tests/live-detection.test.ts`: live signal precision,
+- `tests/render-stability.test.ts`: idempotent live markers and mutation-loop regression,
+- `tests/coalescing-task-runner.test.ts`: serialized/coalesced passive scan execution,
 - `tests/repository.test.ts`: explicit marking, no local pruning, metadata, schema migration,
 - `tests/sync-manager.test.ts`: compaction, quota margins, key encoding, merge, reset generations,
 - `tests/manual-mode.test.ts`: no automatic hooks, popup route/UX, sync permission surface,
@@ -576,6 +605,8 @@ Static routing tests are not a substitute for a two-device browser test. Preserv
 18. Repeat with the second device offline during Reset; reconnect and verify pre-reset history does not return.
 19. Mark a story on the offline device after the other device's Reset; reconnect and verify that post-reset mark can survive.
 20. Open Options and switch one device to local-only; other devices' shared history remains intact.
+21. Open an already-seen article. Its title, hero image, caption, and body remain untouched; seen cards in related/sidebar/lower lists may still dim.
+22. Leave a page containing a live card open after a dynamic update; RTV Shadap must settle instead of continuously rescanning or keeping the service worker busy.
 
 ## Debugging Playbook
 
@@ -679,7 +710,9 @@ This is a product bug unless the user Reset, removed extension storage, or unins
     src/background/service-worker.ts  Message and storage coordinator
     src/background/sync-manager.ts    Compact sync/convergence/reset logic
     src/content/content-script.ts     All-site controller/manual action
+    src/content/coalescing-task-runner.ts  Serialized/coalesced passive scans
     src/content/extractor.ts          Card extraction and grouping
+    src/content/mutation-filter.ts    Extension-owned DOM mutation guard
     src/content/renderer.ts           DOM state attributes/live marker
     src/content/content.css           Dark seen/live visuals
     src/content/site-cleanup.ts       Exact-homepage cleanup

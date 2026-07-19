@@ -8,7 +8,9 @@ import type {
   TabResponse
 } from "../shared/messages";
 import type { ArticleStatus, StorageState } from "../shared/models";
+import { CoalescingTaskRunner } from "./coalescing-task-runner";
 import { extractArticles, toSnapshots, type ExtractedArticle } from "./extractor";
+import { mutationsAreExtensionOwned } from "./mutation-filter";
 import { clearRendering, renderArticles } from "./renderer";
 import { hideDistractingHomepageSections, restoreHiddenSections } from "./site-cleanup";
 
@@ -18,25 +20,40 @@ class RtvSiteController {
   private enabled = true;
   private rescanTimer: number | undefined;
   private observer: MutationObserver | undefined;
+  private readonly scanRunner = new CoalescingTaskRunner(() => this.scanAndRender());
 
   async start(): Promise<void> {
     this.bindRuntimeMessages();
-    await this.scanAndRender();
+    await this.scanRunner.request();
     this.observeMutations();
   }
 
   private scheduleScan(): void {
+    if (!this.enabled) return;
     window.clearTimeout(this.rescanTimer);
-    this.rescanTimer = window.setTimeout(() => void this.scanAndRender(), RESCAN_DEBOUNCE_MS);
+    this.rescanTimer = window.setTimeout(() => {
+      this.rescanTimer = undefined;
+      void this.scanRunner.request().catch(() => undefined);
+    }, RESCAN_DEBOUNCE_MS);
   }
 
   private async scanAndRender(): Promise<void> {
     this.applyHomepageCleanup();
     this.articles = extractArticles(document);
-    await this.renderFromLocalStorage();
-    if (!this.enabled) return;
     const response = await sendMessage({ type: "GET_STATUSES", articles: toSnapshots(this.articles) });
-    this.applyResponse(response);
+    if (response.ok) {
+      this.applyResponse(response);
+      return;
+    }
+    const local = await this.readLocalSnapshot();
+    if (!local) return;
+    this.enabled = local.enabled;
+    this.statuses = local.statuses;
+    if (!this.enabled) {
+      this.stopRendering();
+      return;
+    }
+    renderArticles(this.articles, this.statuses);
   }
 
   private async markCurrentPageSeen(): Promise<TabResponse> {
@@ -60,33 +77,26 @@ class RtvSiteController {
     this.enabled = response.enabled;
     if ("statuses" in response) this.statuses = response.statuses;
     if (!this.enabled) {
-      clearRendering();
-      restoreHiddenSections(document);
+      this.stopRendering();
       return;
     }
     renderArticles(this.articles, this.statuses);
   }
 
-  private async renderFromLocalStorage(): Promise<void> {
+  private async readLocalSnapshot(): Promise<{ enabled: boolean; statuses: ArticleStatus[] } | null> {
     try {
       const result = await storageGet(STORAGE_KEY);
       const state = result[STORAGE_KEY] as Partial<StorageState> | undefined;
-      this.enabled = state?.settings?.enabled !== false;
-      if (!this.enabled) {
-        clearRendering();
-        restoreHiddenSections(document);
-        return;
-      }
-      this.applyHomepageCleanup();
+      const enabled = state?.settings?.enabled !== false;
       const history = state?.history ?? {};
-      this.statuses = toSnapshots(this.articles).map((article) => ({
+      const statuses: ArticleStatus[] = toSnapshots(this.articles).map((article) => ({
         key: article.key,
         isLive: article.isLive,
         state: history[article.key] ? "seen" : "new"
       }));
-      renderArticles(this.articles, this.statuses);
+      return { enabled, statuses };
     } catch {
-      // Background classification still runs below; local storage is only a fast fallback.
+      return null;
     }
   }
 
@@ -95,9 +105,16 @@ class RtvSiteController {
     else restoreHiddenSections(document);
   }
 
+  private stopRendering(): void {
+    window.clearTimeout(this.rescanTimer);
+    this.rescanTimer = undefined;
+    clearRendering();
+    restoreHiddenSections(document);
+  }
+
   private observeMutations(): void {
     this.observer = new MutationObserver((mutations) => {
-      if (mutations.every((mutation) => mutation.target instanceof Element && mutation.target.closest("[data-rtv-tracker-owned='true']"))) return;
+      if (!this.enabled || mutationsAreExtensionOwned(mutations)) return;
       this.scheduleScan();
     });
     this.observer.observe(document.body, {
@@ -115,14 +132,11 @@ class RtvSiteController {
         void this.markCurrentPageSeen().then(sendResponse);
         return true;
       }
-      if (message.type === "HISTORY_CHANGED") void this.scanAndRender();
+      if (message.type === "HISTORY_CHANGED") void this.scanRunner.request().catch(() => undefined);
       if (message.type === "SETTINGS_CHANGED") {
         this.enabled = message.enabled;
-        if (message.enabled) void this.scanAndRender();
-        else {
-          clearRendering();
-          restoreHiddenSections(document);
-        }
+        if (message.enabled) void this.scanRunner.request().catch(() => undefined);
+        else this.stopRendering();
       }
       return undefined;
     });

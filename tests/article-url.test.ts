@@ -21,6 +21,14 @@ describe("article identity", () => {
     expect(identifyArticle("javascript:void(0)", base)).toBeNull();
   });
 
+  it("does not turn page-local controls into the currently open article", () => {
+    const articlePage = "https://www.rtvslo.si/kultura/film-in-tv/odprt-clanek/788463";
+
+    expect(identifyArticle("#", articlePage)).toBeNull();
+    expect(identifyArticle("#comments", articlePage)).toBeNull();
+    expect(identifyArticle("?display=compact", articlePage)).toBeNull();
+  });
+
   it("allows a clear article-like slug fallback", () => {
     expect(identifyArticle("/posebno/to-je-dovolj-dolg-slug", base)?.key).toBe("url:/posebno/to-je-dovolj-dolg-slug");
   });

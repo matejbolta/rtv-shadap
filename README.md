@@ -19,9 +19,11 @@ Ta projekt je bil razvit skozi iterativno delo z LLM agentom. Za prihodnje vzdr�
 - Nalaganje, zapiranje, osveževanje in zapuščanje strani ne spreminjajo zgodovine. Tudi kliki na članke se ne beležijo.
 - Samo popup gumb `Do the magic` doda trenutno najdene članke v trajno lokalno zgodovino.
 - Stabilni ključ pomeni, da ista ročno označena novica ostane siva na naslovnici, kategorijah in drugih RTV straneh.
+- Na strani odprtega članka se lahko posivijo stranske, sorodne in spodnje kartice novic, nikoli pa naslov, glavna slika ali vsebina samega članka.
 - Ob prvem pritisku na `Do the magic` uporabnik enkrat izbere browser sync ali local-only. RTV Shadap ne uporablja prijave ali lastnega računa.
 - Celotna zgodovina ostane lokalna in brez samodejnega poteka; browser sync zaradi kvote vsebuje samo najnovejših 3.000 kompaktnih ključev.
 - Novice z močnim signalom `V živo`, `v zivo` ali `LIVE` ostanejo vizualno polno poudarjene tudi, če so v zgodovini.
+- Dinamične spremembe strani se obdelajo zaporedno in združeno; lastni live markerji razširitve ne sprožajo ponavljajočega skeniranja strani.
 - Izbrani moteči promocijski bloki se še naprej skrivajo samo na natančni RTV naslovnici.
 
 ## Sinhronizacija med napravami
@@ -160,6 +162,7 @@ pnpm watch
 9. Pritisni `Reset`; vse ročno označene novice morajo ponovno postati polno vidne.
 10. Na dveh napravah v istem browser sync okolju vključi sync, na prvi označi stran in potrdi, da se isti ključi na drugi napravi posivijo.
 11. Na prvi napravi naredi globalni `Reset`; druga naprava ne sme ponovno uvesti stare zgodovine, tudi če je bila med resetom brez povezave.
+12. Odpri že označen članek; telo, glavna slika in besedilo članka morajo ostati normalni, stranske kartice že označenih novic pa so lahko sive.
 
 ## Projektna drevesna struktura
 

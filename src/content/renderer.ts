@@ -31,8 +31,17 @@ export function renderArticles(articles: ExtractedArticle[], statuses: ArticleSt
 }
 
 function ensureLiveMarker(card: HTMLElement, isLive: boolean, hasNativeLive: boolean): void {
-  card.querySelectorAll("[data-rtv-tracker-owned='true']").forEach((element) => element.remove());
-  if (!isLive || hasNativeLive) return;
+  const markers = Array.from(card.querySelectorAll<HTMLElement>(
+    "[data-rtv-tracker-owned='true'][data-rtv-tracker-marker='live']"
+  ));
+  if (!isLive || hasNativeLive) {
+    markers.forEach((marker) => marker.remove());
+    return;
+  }
+  if (markers.length > 0) {
+    markers.slice(1).forEach((marker) => marker.remove());
+    return;
+  }
   const marker = document.createElement("span");
   marker.dataset.rtvTrackerOwned = "true";
   marker.className = "rtv-tracker-marker";

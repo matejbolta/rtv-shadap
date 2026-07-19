@@ -88,4 +88,37 @@ describe("extractArticles", () => {
     expect(document.querySelector<HTMLElement>(".xl-news")?.style.display).not.toBe("none");
     expect(document.querySelector<HTMLElement>(".container.text-center[data-rtv-tracker-hidden-section='promo-banner']")?.style.display).toBe("none");
   });
+
+  it("never extracts the open article body from hash-only controls", () => {
+    const originalPath = location.pathname;
+    window.history.replaceState({}, "", "/kultura/film-in-tv/odprt-clanek/788463");
+    document.documentElement.innerHTML = `
+      <main>
+        <div class="article-body">
+          <article class="article">
+            <h1>Odprt članek mora ostati normalen</h1>
+            <a href="#">Spremljajte RTVSLO.si kot prednostni vir</a>
+            <p>Prvi daljši odstavek odprtega članka.</p>
+            <p>Drugi daljši odstavek odprtega članka.</p>
+            <div class="exposed-article">
+              <a href="/n/782495"><img src="related.jpg" alt=""></a>
+              <div class="article-title"><a href="/n/782495">Prava sorodna novica</a></div>
+            </div>
+          </article>
+        </div>
+        <aside class="article-container">
+          <a href="/kultura/film-in-tv/druga-novica/788419"><h3>Novica v stranskem seznamu</h3></a>
+        </aside>
+      </main>
+    `;
+
+    try {
+      const articles = extractArticles(document);
+      expect(articles.some((article) => article.key === "rtv:788463")).toBe(false);
+      expect(articles.map((article) => article.key).sort()).toEqual(["rtv:782495", "rtv:788419"]);
+      expect(articles.flatMap((article) => article.cardElements).some((card) => card.matches("article.article"))).toBe(false);
+    } finally {
+      window.history.replaceState({}, "", originalPath);
+    }
+  });
 });

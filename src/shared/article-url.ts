@@ -27,7 +27,7 @@ export interface ArticleIdentity {
 }
 
 export function normalizeRtvUrl(rawHref: string, baseHref: string): URL | null {
-  if (!rawHref.trim() || rawHref.startsWith("javascript:")) return null;
+  if (isPageLocalReference(rawHref)) return null;
   try {
     const url = new URL(rawHref, baseHref);
     if (url.origin !== HOMEPAGE_ORIGIN) return null;
@@ -76,7 +76,7 @@ export function identifyRtv365Recording(recordingId: string): ArticleIdentity | 
 }
 
 function normalizeSupportedUrl(rawHref: string, baseHref: string): URL | null {
-  if (!rawHref.trim() || rawHref.startsWith("javascript:")) return null;
+  if (isPageLocalReference(rawHref)) return null;
   try {
     const url = new URL(rawHref, baseHref);
     url.hostname = url.hostname.toLowerCase();
@@ -88,6 +88,11 @@ function normalizeSupportedUrl(rawHref: string, baseHref: string): URL | null {
   } catch {
     return null;
   }
+}
+
+function isPageLocalReference(rawHref: string): boolean {
+  const href = rawHref.trim().toLowerCase();
+  return !href || href.startsWith("#") || href.startsWith("?") || href.startsWith("javascript:");
 }
 
 function identifyRtv365Media(url: URL): ArticleIdentity | null {

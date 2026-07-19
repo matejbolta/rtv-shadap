@@ -2,6 +2,12 @@
 
 Use `release/rtv-shadap-vX.Y.Z-webstore.zip` for Chrome Web Store upload. Its `manifest.json` is at the zip root.
 
+## Version 0.3.1 update notes
+
+```text
+Fixed an issue where a page-local control inside an opened RTV SLO article could cause the article body to be dimmed. Seen styling now remains limited to news and media cards, including category, related, and sidebar lists; opened article content always stays fully readable. Also fixed repeated page rescans on pages containing live-story markers and coalesced rapid dynamic updates to reduce unnecessary CPU and memory pressure.
+```
+
 ## Version 0.3.0 update notes
 
 ```text

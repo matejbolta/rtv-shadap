@@ -140,7 +140,7 @@ function findTitleElements(anchor: HTMLAnchorElement, card: HTMLElement): HTMLEl
 function pickTitle(anchor: HTMLAnchorElement, titleElements: HTMLElement[]): string {
   const candidates = [
     anchor.getAttribute("aria-label") ?? "",
-    anchor.textContent ?? "",
+    textWithoutCategory(anchor),
     anchor.getAttribute("title") ?? "",
     ...titleElements.map(textWithoutCategory)
   ].map(normalizeTitle);

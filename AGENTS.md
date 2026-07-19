@@ -14,12 +14,14 @@ This repository is maintained with AI coding agents in mind. Before making non-t
 - Clicking an article must never add it to history.
 - Only the popup action `Do the magic` may mark the currently extracted page articles as seen.
 - A manually marked article must render as seen everywhere on RTV SLO where the same stable article key appears.
+- Only news/media cards may be dimmed. The body, hero image, and prose of an opened article must always remain visually untouched.
 - Full manually marked history remains local and persistent until the user resets it or removes extension data; do not expire or prune local history automatically.
 - Browser-native device sync is opt-in. Never read or write `chrome.storage.sync` before the user chooses browser sync.
 - Sync only compact article keys and day-level timestamps. Never sync titles, canonical URLs, page HTML, or analytics.
 - The synchronized ledger may retain only the newest 3,000 keys to respect browser quotas; this must never prune full local history.
 - When browser sync is enabled, Reset is global and must use the reset generation to stop stale offline devices from resurrecting history.
 - Keep live stories visually prominent even when their stable key is in history.
+- Rendering must settle after extension-owned DOM updates; never let the mutation observer rescan in response to RTV Shadap's own markers.
 - The enable switch controls both rendering and manual marking. When disabled, do not write article history.
 - Homepage cleanup remains limited to the exact RTV SLO homepage. Do not turn it into a generic ad blocker.
 - Do not add developer-operated servers, analytics, telemetry, ads, tracking, remote code, OAuth, or external APIs. Browser-native sync is the only approved transmission path.
