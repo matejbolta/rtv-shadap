@@ -2,8 +2,8 @@
 
 This document is the durable project memory for future coding agents.
 
-Last updated: 2026-07-19.
-Current source version: 0.3.1.
+Last updated: 2026-07-20.
+Current source version: 0.3.2.
 
 ## Start Here
 
@@ -132,6 +132,20 @@ The chosen design uses the browser's existing extension sync facility:
 - If browser sync itself is unavailable or disabled, the extension remains functional locally.
 
 This is intentionally not a custom cross-browser service. Supporting Chrome-to-Brave or unrelated browser profiles would require a separate identity/pairing and backend design, which is outside the approved scope.
+
+### Version 0.3.2 Stable Installation Identity
+
+Browser sync storage is scoped to an extension ID. Before 0.3.2, unpacked builds had no manifest `key`, so Chromium derived their IDs from their local filesystem paths. A Mac build and a Linux build loaded from different paths therefore received different IDs and could not share `chrome.storage.sync`, even with the same version and Brave Sync chain.
+
+The manifest now includes the published Chrome Web Store public key. Its SHA-256-derived ID is verified by a regression test as:
+
+    oeplikfkggjcbekgclpegnblalngbpai
+
+This is public identity metadata extracted from the already published CRX, not a private signing key, credential, permission, account identifier, or data-transmission mechanism. Do not rotate or remove it without an explicit extension-identity migration. Web Store installs already use this ID; manual and development builds now retain it regardless of their local path.
+
+Existing pre-0.3.2 unpacked installs keep history under their old path-derived extension ID. Chromium does not automatically migrate extension storage between IDs. Avoid running an old-ID and Store-ID copy simultaneously on the same RTV page.
+
+Brave has a second independent requirement: every participating device must enable the `Extensions` data type under Brave Sync. When that type is disabled, `chrome.storage.sync` accepts local writes but behaves locally and does not send or receive them. The general Brave `Settings` data type and `Allow Google login for extensions` toggle are not required by RTV Shadap.
 
 ### Version 0.3.1 Article-page Boundary
 
@@ -539,7 +553,7 @@ Share URL:
 
     https://chromewebstore.google.com/detail/rtv-shadap/oeplikfkggjcbekgclpegnblalngbpai
 
-Published history existed through version 0.2.6 before the sync update, and version 0.3.0 introduced browser-native sync. Version 0.3.1 is the current article-page-boundary patch source. Verify the Web Store dashboard, Git tag, and GitHub Release rather than assuming this document proves Store publication.
+Published history existed through version 0.2.6 before the sync update, version 0.3.0 introduced browser-native sync, and version 0.3.1 fixed article-page boundaries and render stability. Version 0.3.2 stabilizes the extension ID for manual/development builds. Verify the Web Store dashboard, Git tag, and GitHub Release rather than assuming this document proves Store publication.
 
 ## Versioning and Release
 
@@ -651,6 +665,7 @@ Check:
 - both devices explicitly selected browser sync,
 - both installs are the same Web Store extension ID,
 - both profiles participate in the same Chrome Sync account or Brave Sync chain,
+- Brave's `Extensions` sync data type is enabled on every participating Brave device,
 - Chrome and Brave are not being mixed,
 - `rtvShadapSyncMeta` and fixed buckets exist in `chrome.storage.sync`,
 - service-worker console has quota/provider errors,

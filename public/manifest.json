@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsGjYty+mTrwhlzcOYuNnOfD/zn07B+PN2Ge26kkHVq2lyahIb2cQV3bSYALSSGwecSyOv1SsZv4vwBRGeTGSHSrMriLVetFP76Sq16SuPsyAz7E6XGeNzIIBZh28K6ZWA1Qqc1NIJcaAeOgm0/ItWVVxRmzqYlFBkBeQ7i7uTkPwzGEV7ZUErcjHBUa13C3uXooxbAnI6p6HbIIIZTPsj7HUaeHAj09g82mry9R6s0aG+udICeV/wIl6tXEbeZ8qe+YYNmZYiY2NgC8mFID2CDrYqXGtQBWhRE7jrpO5NDrfNuBsYIdBtVVrhM7LLepokWOPxLu0yG8xBdBsT/TmxwIDAQAB",
   "name": "RTV Shadap",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Ročno posivi RTV SLO novice in jih po želji sinhronizira med napravami.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.rtvslo.si/*"],

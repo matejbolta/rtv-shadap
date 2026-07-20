@@ -2,6 +2,12 @@
 
 Use `release/rtv-shadap-vX.Y.Z-webstore.zip` for Chrome Web Store upload. Its `manifest.json` is at the zip root.
 
+## Version 0.3.2 update notes
+
+```text
+Improved cross-device setup reliability by preserving the published Chrome Web Store extension ID in development and manual packages. This prevents copies loaded from different local folders from receiving different sync identities. No permissions, synchronized data, or collection behavior changed. Brave users must enable the Extensions data type in Brave Sync on every participating device.
+```
+
 ## Version 0.3.1 update notes
 
 ```text
@@ -129,6 +135,8 @@ The extension stores stable article IDs, canonical URLs, last known titles, and 
 8. With browser sync enabled on two browser profiles in the same sync environment, mark a page on one device and confirm matching stories become seen on the other after browser synchronization.
 9. Open the extension popup to reset history. With sync enabled, the reset propagates to other opted-in devices.
 ```
+
+For Brave testing, the `Extensions` data type must be enabled under Brave Sync on both devices. The unrelated `Allow Google login for extensions` setting is not required.
 
 ## Dashboard assets
 

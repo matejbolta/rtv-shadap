@@ -29,7 +29,9 @@ Ta projekt je bil razvit skozi iterativno delo z LLM agentom. Za prihodnje vzdr�
 ## Sinhronizacija med napravami
 
 - Chrome uporablja obstoječi Chrome Sync profil; Brave uporablja obstoječo Brave Sync verigo. RTV Shadap ne prikazuje prijave in ne pozna uporabnikove identitete.
+- Na vsaki Brave napravi mora biti pod `Settings → Sync` vklopljen podatkovni tip `Extensions`; izklopljena splošna kategorija `Settings` za RTV Shadap ni potrebna.
 - Vsaka naprava mora enkrat izrecno izbrati `Sync across devices`. Izbiro je pozneje mogoče spremeniti prek strani z možnostmi razširitve.
+- Vse sodelujoče namestitve morajo imeti isti extension ID. Web Store namestitve ga dobijo samodejno; od verzije 0.3.2 ga tudi ročni release paketi ohranijo kot `oeplikfkggjcbekgclpegnblalngbpai` ne glede na lokalno pot.
 - Naprave v istem browser sync okolju združijo ročno označene ključe. Chrome in Brave med seboj nimata skupnega sync okolja.
 - Spremembe, narejene brez povezave, se po ponovni povezavi združijo. Ko je sync vključen, `Reset` počisti zgodovino na vseh vključenih napravah.
 - Naslovi, polni URL-ji, vsebina strani in lokalna celotna zgodovina se ne sinhronizirajo.
@@ -67,6 +69,10 @@ V Releases sta lahko dva zipa za isto verzijo:
 
 - `rtv-shadap-vX.Y.Z.zip`: uporabi tega za rocno namestitev na svojem racunalniku.
 - `rtv-shadap-vX.Y.Z-webstore.zip`: tega ne uporabljaj za rocno namestitev; namenjen je samo za upload v Chrome Web Store.
+
+Od verzije 0.3.2 ročni paket uporablja javni Web Store ključ, zato ima pri `Load unpacked` isti ID kot Store različica. To omogoča isti browser-sync prostor tudi, če je paket odzipan v različne poti. Ključ je javna identiteta razširitve, ne zasebni podpisni ključ in ne dovoljenje za dostop do uporabniških podatkov.
+
+Stare unpacked namestitve do 0.3.1 so dobile ID iz lokalne poti. Njihova lokalna zgodovina je vezana na ta stari ID in se v novo Store-identiteto ne preseli samodejno. Pred odstranitvijo stare namestitve preveri, ali želiš obdržati njeno zgodovino; ne poganjaj stare in nove različice hkrati na isti RTV strani.
 
 Ce release se ni narejen, lahko uporabis tudi zadnji successful GitHub Actions run:
 

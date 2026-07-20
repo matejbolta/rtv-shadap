@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import serviceWorker from "../src/background/service-worker.ts?raw";
 import contentScript from "../src/content/content-script.ts?raw";
@@ -27,6 +28,7 @@ describe("manual-only product mode", () => {
 
   it("uses browser-native sync without an extension account or identity permission", () => {
     const manifest = JSON.parse(manifestText) as {
+      key?: string;
       permissions?: string[];
       options_ui?: { page?: string };
     };
@@ -36,6 +38,19 @@ describe("manual-only product mode", () => {
     expect(serviceWorker).toContain("chrome.storage.onChanged");
     expect(manifest.permissions).toEqual(["storage"]);
     expect(manifest.options_ui?.page).toBe("options.html");
+  });
+
+  it("keeps manual builds on the published Web Store extension ID", () => {
+    const manifest = JSON.parse(manifestText) as { key?: string };
+    expect(manifest.key).toBeTypeOf("string");
+    const digest = createHash("sha256")
+      .update(Buffer.from(manifest.key ?? "", "base64"))
+      .digest()
+      .subarray(0, 16);
+    const extensionId = Array.from(digest, (byte) => (
+      String.fromCharCode(97 + (byte >> 4), 97 + (byte & 15))
+    )).join("");
+    expect(extensionId).toBe("oeplikfkggjcbekgclpegnblalngbpai");
   });
 
   it("loads on every path of the supported RTV origin", () => {
